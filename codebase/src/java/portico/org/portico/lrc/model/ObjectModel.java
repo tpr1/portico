@@ -224,10 +224,8 @@ public class ObjectModel implements Serializable
 		// anything, we may well have it
 		if( name.equalsIgnoreCase("objectroot") || name.equalsIgnoreCase("hlaobjectroot") )
 			return this.getObjectRoot();
-		
-		// the only other thing that could have gotten missed is a MOM class
-		// below will return null if it isn't a MOM class
-		return this.getObjectClass( Mom.getMomClassHandle(version,name) );
+		else
+			return null;
 	}
 	
 	/**
@@ -237,36 +235,17 @@ public class ObjectModel implements Serializable
 	 */
 	public ACMetadata getAttributeClass( int classHandle, String attributeName )
 	{
-		// find the class //
-		OCMetadata ocMetadata = this.oclasses.get( classHandle );
-		// do we have a class?
-		if( ocMetadata == null )
-		{
+		// find the class being referenced -- return null if we don't know it
+		OCMetadata objectClass = this.oclasses.get( classHandle );
+		if( objectClass == null )
 			return null;
-		}
 		
-		// find the attribute //
-		// Is this a MOM class? //
-		if( classHandle < MAX_MOM_HANDLE )
-		{
-			// make sure we aren't talking privilegeToDelete
-			if( attributeName.equals("privilegeToDelete") ||
-				attributeName.equals("HLAprivilegeToDelete") )
-			{
-				return this.ocroot.getDeclaredAttribute( this.privilegeToDelete );
-			}
-			
-			// it sure is, do a special lookup because of the requirement to map names
-			// depending on the HLA version involved
-			int aHandle = Mom.getMomAttributeHandle( version, classHandle, attributeName );
-			return ocMetadata.getAttribute( aHandle );
-		}
+		// find the attribute
+		ACMetadata attribute = objectClass.getAttribute( attributeName );
+		if( attribute != null )
+			return attribute;
 		else
-		{
-			// it isn't, we can just look directly in the class
-			int aHandle = ocMetadata.getAttributeHandle( attributeName );
-			return ocMetadata.getAttribute( aHandle );
-		}
+			return null;
 	}
 	
 	/**
@@ -740,6 +719,7 @@ public class ObjectModel implements Serializable
 	 * won't ever be marked deprecated, rather, I'll just go all "preemptive strike" on it. One day
 	 * you WILL wake up and it WILL just be gone.
 	 */
+	@Deprecated
 	public static void mommify( ObjectModel model )
 	{
 		// let the abomonation begin //
@@ -779,18 +759,18 @@ public class ObjectModel implements Serializable
 		//////////////////////////////////
 		// add the predefined MOM stuff //
 		//////////////////////////////////
-		switch( model.version )
-		{
-			case HLA13:
-			case IEEE1516:
-				Mom.insertMomHierarchy( model );
-				break;
-			case IEEE1516e:
-				Mom.insertMomHierarchy1516e( model );
-				break;
-			default:
-				throw new RuntimeException( "Could't determine spec version when inserting MOM" );
-		}
+//		switch( model.version )
+//		{
+//			case HLA13:
+//			case IEEE1516:
+//				Mom.insertMomHierarchy( model );
+//				break;
+//			case IEEE1516e:
+//				Mom.insertMomHierarchy1516e( model );
+//				break;
+//			default:
+//				throw new RuntimeException( "Could't determine spec version when inserting MOM" );
+//		}
 		
 		// lock the model again //
 		if( wasLocked )

@@ -338,6 +338,19 @@ public class OCMetadata implements Serializable
 			}
 		}
 	}
+
+	/**
+	 * Get the {@link ACMetadata} for the attribute of the given name; either directly declared
+	 * or inherited. If it cannot be found, null will be returned.
+	 */
+	public ACMetadata getAttribute( String name )
+	{
+		ACMetadata attribute = getDeclaredAttribute( name );
+		if( attribute != null || this.parent == null )
+			return attribute;
+		else
+			return this.parent.getAttribute( name );
+	}
 	
 	/**
 	 * Return the handle of the contained attribute of the given name. If there is no attribute

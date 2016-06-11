@@ -1,5 +1,5 @@
 /*
- *   Copyright 2009 The Portico Project
+ *   Copyright 2016 The Portico Project
  *
  *   This file is part of portico.
  *
@@ -18,22 +18,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.portico.impl.HLAVersion;
 import org.portico.impl.hla1516e.types.encoding.HLA1516eUnicodeString;
 import org.portico.lrc.PorticoConstants;
 import org.portico.lrc.compat.JAttributeNotDefined;
 import org.portico.lrc.compat.JEncodingHelpers;
+import org.portico.lrc.compat.JRTIinternalError;
+import org.portico.lrc.management.Federate;
 import org.portico.lrc.management.Federation;
-import org.portico.lrc.model.Mom;
-import org.portico.lrc.model.OCInstance;
+import org.portico.lrc.model.ACMetadata;
+import org.portico.lrc.model.OCMetadata;
+import org.portico.lrc.model.ObjectModel;
 import org.portico.lrc.services.object.msg.UpdateAttributes;
 
-/**
- * Contains links between the {@link OCInstance} used to represent the federation in the federation
- * and the {@link Federation} management object that holds all the information. This class also
- * serializes the information for updates when they are requested.
- */
 public class MomFederation
 {
 	//----------------------------------------------------------
@@ -41,192 +38,244 @@ public class MomFederation
 	//----------------------------------------------------------
 
 	//----------------------------------------------------------
+	//                      ENUMERATIONS
+	//----------------------------------------------------------
+	private enum Attribute
+	{
+		FederationName("FederationName","HLAfederationName"),
+		FederatesInFederation("FederatesInFederation","HLAfederatesInFederation"),
+		RtiVersion("RTIversion","HLARTIversion"),
+		MimDesignator(null,"HLAMIMdesignator"),                        // 1516e
+		FomModuleDesignatorList(null,"HLAFOMmoduleDesignatorList"),    // 1516e
+		CurrentFdd(null,"HLAcurrentFDD"),                              // 1516e
+		FedID("FEDid",null),
+		TimeImplementationName(null,"HLAtimeImplementationName"),      // 1516e
+		LastSaveName("LastSaveName","HLAlastSaveName"),
+		LastSaveTime("LastSaveTime","HLAlastSaveTime"),
+		NextSaveName("NextSaveName","HLAnextSaveName"),
+		NextSaveTime("NextSaveTime","HLAnextSaveTime"),
+		AutoProvide(null,"HLAautoProvide");                            // 1516e
+
+		private final String hla13;
+		private final String ieee1516e; 
+		private Attribute( String hla13, String ieee1516e )
+		{
+			this.hla13 = hla13;
+			this.ieee1516e = ieee1516e;
+		}
+	}
+	
+	//----------------------------------------------------------
 	//                   INSTANCE VARIABLES
 	//----------------------------------------------------------
-	protected Federation federation;
-	protected Map<Integer,MomFederate> federates;
-	protected OCInstance federationObject;
-	protected Logger momLogger;
+	private int classHandle;
+	private int managerClassHandle;
+	private Map<Attribute,Integer> handleMap;
+	private HLAVersion targetVersion; // HLA version of the local requesting federate
+	
+	private int instanceHandle;                    // handle of the instance of HLAfederation
+	private Map<Federate,Integer> federateHandles; // handles for all known HLAfederate instances
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	public MomFederation( Federation federation, OCInstance federationObject, Logger lrcLogger )
+	public MomFederation( HLAVersion federateVersion )
 	{
-		this.federation = federation;
-		this.federates = new HashMap<Integer,MomFederate>();
-		this.federationObject = federationObject;
-		this.momLogger = lrcLogger;
+		this.handleMap = new HashMap<>();
+		this.targetVersion = federateVersion;
 	}
 
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
-
-	public void addFederate( MomFederate momFederate )
+	/**
+	 * Fetch all the handles for this type from the MOM information in the given object model.
+	 */
+	public void initialize( ObjectModel objectModel ) throws JRTIinternalError
 	{
-		this.federates.put( momFederate.federate.getFederateHandle(), momFederate );
-	}
-	
-	public MomFederate removeFederate( int federateHandle )
-	{
-		return this.federates.remove( federateHandle );
-	}
-	
-	public MomFederate getFederate( int federateHandle )
-	{
-		return this.federates.get( federateHandle );
-	}
-
-	public void clear()
-	{
-		this.federates.clear();
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-	//////////////////////// Property Serialization Methods /////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////
-	private byte[] getFederationName( HLAVersion version )
-	{
-		return encodeString( version, federation.getFederationName() );
-	}
-	
-	private byte[] getFederatesInFederation( HLAVersion version )
-	{
-		//FIXME yeah, clearly in need of fixing :P
-		return notYetSupported( version, "FederatesInFederation" );
-	}
-	
-	private byte[] getRtiVersion( HLAVersion version )
-	{
-		return encodeString( version, PorticoConstants.RTI_NAME+" v"+PorticoConstants.RTI_VERSION );
+		this.managerClassHandle = -1;
+		
+		// find the manager class
+		OCMetadata managerClass = objectModel.getObjectClass( "Manager" );
+		if( managerClass == null )
+			managerClass = objectModel.getObjectClass( "HLAmanager" );
+		
+		this.managerClassHandle = managerClass.getHandle();
+		
+		// find the HLAfederate class
+		OCMetadata federationClass = objectModel.getObjectClass( "Manager.Federation" );
+		if( federationClass == null )
+			federationClass = objectModel.getObjectClass( "HLAmanager.HLAfederation" );
+		
+		if( federationClass == null )
+			throw new JRTIinternalError( "Could not bootstrap MOM: Missing HLAfederation class" );
+		
+		// pull the class and attribute handles out
+		this.classHandle = federationClass.getHandle();
+		for( Attribute attribute : Attribute.values() )
+		{
+			ACMetadata temp = federationClass.getDeclaredAttribute( attribute.hla13 );
+			if( temp == null )
+				temp = federationClass.getDeclaredAttribute( attribute.ieee1516e );
+			
+			// if we found this attribute in the FOM, store the handle
+			if( temp != null )
+				this.handleMap.put( attribute, temp.getHandle() );
+		}
 	}
 
-	private byte[] getMimDesignator( HLAVersion version )
-	{
-		return notYetSupported( version, "MimDesignator" );
-	}
-
-	private byte[] getFomModuleDesignatorList( HLAVersion version )
-	{
-		return notYetSupported( version, "HLAversion" );
-	}
-
-	private byte[] getCurrentFdd( HLAVersion version )
-	{
-		return notYetSupported( version, "CurrentFDD" );
-	}
-
-	private byte[] getTimeImplementationName( HLAVersion version )
-	{
-		return notYetSupported( version, "TimeImplementation" );
-	}
-
-	private byte[] getFedID( HLAVersion version )
-	{
-		//FIXME Obviously
-		return notYetSupported( version, "FedID" );
-	}
-	
-	private byte[] getLastSaveName( HLAVersion version )
-	{
-		return notYetSupported( version, "LastSaveName" );
-	}
-	
-	private byte[] getLastSaveTime( HLAVersion version )
-	{
-		//return JEncodingHelpers.encodeDouble( 0.0 );
-		return notYetSupported( version, "LastSaveTime" );
-	}
-	
-	private byte[] getNextSaveName( HLAVersion version )
-	{
-		return notYetSupported( version, "NextSaveName" );
-	}
-	
-	private byte[] getNextSaveTime( HLAVersion version )
-	{
-		//return JEncodingHelpers.encodeDouble( 0.0 );
-		return notYetSupported( version, "NextSaveTime" );
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////// Update Generating Methods ///////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////
-	public UpdateAttributes generateUpdate( HLAVersion version, Set<Integer> handles )
+	public UpdateAttributes generateUpdate( Federation federation, Set<Integer> requested )
 		throws JAttributeNotDefined
 	{
-		HashMap<Integer,byte[]> attributes = new HashMap<Integer,byte[]>();
+		HashMap<Integer,byte[]> map = new HashMap<Integer,byte[]>();
 
-		// loop through the attributes and get the appropriate values
-		for( Integer attributeHandle : handles )
+		for( Attribute attribute : handleMap.keySet() )
 		{
-			Mom.Federation enumValue = Mom.Federation.forHandle( attributeHandle );
-			switch( enumValue )
+			int handle = handleMap.get( attribute );
+			if( requested.contains(handle) == false )
+				continue;
+		
+			switch( attribute )
 			{
 				case FederationName:
-					attributes.put( attributeHandle, getFederationName(version) );
+					map.put( handle, getFederationName(federation) );
 					break;
 				case FederatesInFederation:
-					attributes.put( attributeHandle, getFederatesInFederation(version) );
+					map.put( handle, getFederatesInFederation(federation) );
 					break;
 				case RtiVersion:
-					attributes.put( attributeHandle, getRtiVersion(version) );
+					map.put( handle, getRtiVersion() );
 					break;
 				case MimDesignator:
-					attributes.put( attributeHandle, getMimDesignator(version) );
+					map.put( handle, getMimDesignator() );
 					break;
 				case FomModuleDesignatorList:
-					attributes.put( attributeHandle, getFomModuleDesignatorList(version) );
+					map.put( handle, getFomModuleDesignatorList() );
 					break;
 				case CurrentFdd:
-					attributes.put( attributeHandle, getCurrentFdd(version) );
+					map.put( handle, getCurrentFdd() );
 					break;
 				case FedID:
-					attributes.put( attributeHandle, getFedID(version) );
+					map.put( handle, getFedID() );
 					break;
 				case TimeImplementationName:
-					attributes.put( attributeHandle, getTimeImplementationName(version) );
+					map.put( handle, getTimeImplementationName() );
 					break;
 				case LastSaveName:
-					attributes.put( attributeHandle, getLastSaveName(version) );
+					map.put( handle, getLastSaveName() );
 					break;
 				case LastSaveTime:
-					attributes.put( attributeHandle, getLastSaveTime(version) );
+					map.put( handle, getLastSaveTime() );
 					break;
 				case NextSaveName:
-					attributes.put( attributeHandle, getNextSaveName(version) );
+					map.put( handle, getNextSaveName() );
 					break;
 				case NextSaveTime:
-					attributes.put( attributeHandle, getNextSaveTime(version) );
+					map.put( handle, getNextSaveTime() );
 					break;
 				case AutoProvide:
-					attributes.put( attributeHandle, notYetSupported(version,"AutoProvide") );
-					break;
-				case ConveyRegionDesignatorSets:
-					attributes.put( attributeHandle, notYetSupported(version,"ConveyRegionDesignatorSets") );
+					map.put( handle, notYetSupported("AutoProvide") );
 					break;
 				default:
 					break;
 			}
 		}
 		
-		UpdateAttributes update = new UpdateAttributes( federationObject.getHandle(),
-		                                                new byte[0],
-		                                                attributes );
+		UpdateAttributes update = new UpdateAttributes( classHandle, new byte[0], map );
 		update.setSourceFederate( PorticoConstants.RTI_HANDLE );
 		return update;
 	}
 
-	private byte[] notYetSupported( HLAVersion version, String property )
+	public int getClassHandle()
 	{
-		momLogger.trace( "Requeted MOM property that isn't supported yet: Federation." + property );
-		return encodeString( version, "property ["+property+"] not yet supported" );
+		return this.classHandle;
 	}
 	
-	private byte[] encodeString( HLAVersion version, String string )
+	public int getManagerClassHandle()
 	{
-		switch( version )
+		return this.managerClassHandle;
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////
+	/// Attribute Encoding Methods    ////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////
+	private byte[] getFederationName( Federation federation )
+	{
+		return encodeString( federation.getFederationName() );
+	}
+	
+	private byte[] getFederatesInFederation( Federation federation )
+	{
+		//FIXME yeah, clearly in need of fixing :P
+		return notYetSupported( "FederatesInFederation" );
+	}
+	
+	private byte[] getRtiVersion()
+	{
+		return encodeString( PorticoConstants.RTI_NAME+" v"+PorticoConstants.RTI_VERSION );
+	}
+
+	private byte[] getMimDesignator()
+	{
+		return notYetSupported( "MimDesignator" );
+	}
+
+	private byte[] getFomModuleDesignatorList()
+	{
+		return notYetSupported( "HLAversion" );
+	}
+
+	private byte[] getCurrentFdd()
+	{
+		return notYetSupported( "CurrentFDD" );
+	}
+
+	private byte[] getTimeImplementationName()
+	{
+		return notYetSupported( "TimeImplementation" );
+	}
+
+	private byte[] getFedID()
+	{
+		//FIXME Obviously
+		return notYetSupported( "FedID" );
+	}
+	
+	private byte[] getLastSaveName()
+	{
+		return notYetSupported( "LastSaveName" );
+	}
+	
+	private byte[] getLastSaveTime()
+	{
+		//return JEncodingHelpers.encodeDouble( 0.0 );
+		return notYetSupported( "LastSaveTime" );
+	}
+	
+	private byte[] getNextSaveName()
+	{
+		return notYetSupported( "NextSaveName" );
+	}
+	
+	private byte[] getNextSaveTime()
+	{
+		//return JEncodingHelpers.encodeDouble( 0.0 );
+		return notYetSupported( "NextSaveTime" );
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////// Update Generating Methods ///////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////
+
+	private byte[] notYetSupported( String property )
+	{
+		//momLogger.trace( "Requeted MOM property that isn't supported yet: Federation." + property );
+		return encodeString( "property ["+property+"] not yet supported" );
+	}
+	
+	private byte[] encodeString( String string )
+	{
+		switch( targetVersion )
 		{
 			case HLA13:
 				return JEncodingHelpers.encodeString( string );
@@ -235,10 +284,10 @@ public class MomFederation
 			case IEEE1516:
 				return new HLA1516eUnicodeString(string).toByteArray();
 			default:
-				throw new IllegalArgumentException( "Unknown Spec Version: "+version );
+				throw new IllegalArgumentException( "Unknown Spec Version: "+targetVersion );
 		}
 	}
-	
+
 	//----------------------------------------------------------
 	//                     STATIC METHODS
 	//----------------------------------------------------------

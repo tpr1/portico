@@ -16,6 +16,8 @@ package org.portico.lrc.services.mom.data;
 
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -54,8 +56,16 @@ public class MomManager implements SaveRestoreTarget
 	private LRCState lrcState;
 	private HLAVersion hlaVersion;
 	private Logger logger;
-	private MomFederation momFederation;
 
+	// The Serializers. These classes extract the handles for the MOM bits and pieces
+	// and then take care of servicing update requests.
+	private MomFederation momFederation;
+	private MomFederate momFederate;
+	
+	// handles and instances of MOM objects created
+	private OCInstance momFederationObject;               // HLAfederation object
+	private Map<Federate,OCInstance> momFederateObjects;  // HLAfederate objects
+	
 	// this flag is used to stop discovery notifications being sent during a federation restore
 	// we re-populate the momFederation from the lrcState and use the federateJoinedFederation
 	// to create the MomFedeate objects, but we don't want to send discovery notices.
@@ -71,11 +81,37 @@ public class MomManager implements SaveRestoreTarget
 		this.hlaVersion = hlaVersion;
 		this.logger = logger;
 		this.isRestore = false;
+
+		this.reinitialize();
 	}
 
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+
+	private void reinitialize()
+	{
+		this.momFederation = new MomFederation( hlaVersion );
+		this.momFederate = new MomFederate( hlaVersion );
+		
+		this.momFederationObject = null;
+		this.momFederateObjects = new HashMap<>();
+	}
+	
+	public final int getFederationClassHandle()
+	{
+		return momFederation.getClassHandle();
+	}
+	
+	public final int getFederateClassHandle()
+	{
+		return momFederate.getClassHandle();
+	}
+	
+	public final int getManagerClassHandle()
+	{
+		return momFederation.getManagerClassHandle();
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////// Lifecycle Handlers ///////////////////////////////
@@ -95,12 +131,22 @@ public class MomManager implements SaveRestoreTarget
 		if( enabled == false )
 			return;
 		
-		// create the object for the federation and store it away as an undiscovered object
-		OCInstance momFederation = getFederationClass().newInstance( PorticoConstants.RTI_HANDLE );
-		this.momFederation = new MomFederation( lrcState.getFederation(), momFederation, logger );
-		momFederation.setHandle( 0 ); // handle for MOM federation object, same as RTI fed handle
-		momFederation.setName( "MOM.Federation("+lrcState.getFederationName()+")" );
-		lrcState.getRepository().addUndiscoveredInstance( momFederation );
+		// Initialize our handle collecting methods
+		try
+		{
+			this.momFederation.initialize( lrcState.getFOM() );
+			this.momFederate.initialize( lrcState.getFOM() );
+		}
+		catch( Exception e )
+		{
+			logger.error( "Could not initialize the MOM: "+e.getMessage(), e );
+		}
+		
+		// Create an object instance for the federation and store it as an undiscovered object
+		momFederationObject = getFederationClass().newInstance( 0 );
+		momFederationObject.setHandle( 0 ); // handle for MOM federation object, same as RTI fed handle
+		momFederationObject.setName( "MOM.Federation("+lrcState.getFederationName()+")" );
+		lrcState.getRepository().addUndiscoveredInstance( momFederationObject );
 		
 		if( logger.isTraceEnabled() )
 			logger.trace( "Created Mom.Federation object, added to Repository (undiscovered)" );
@@ -116,6 +162,7 @@ public class MomManager implements SaveRestoreTarget
 			return;
 		
 		// reinitialize
+		this.reinitialize();
 	}
 	
 	/**
@@ -129,13 +176,11 @@ public class MomManager implements SaveRestoreTarget
 		if( enabled == false )
 			return;
 		
-		// create the object for the Federate and queeu up a discovery
-		OCInstance ocInstance = getFederateClass().newInstance( PorticoConstants.RTI_HANDLE );
+		// create the object for the Federate and queue up a discovery
+		OCInstance ocInstance = getFederateClass().newInstance( 0 );
 		ocInstance.setHandle( lrcState.getMomFederateObjectHandle(federate.getFederateHandle()) );
 		ocInstance.setName( "MOM.Federate("+federate.getFederateName()+")" );
-
-		// put the momFederate into the momFederation
-		momFederation.addFederate( new MomFederate(federate,ocInstance,logger) );
+		this.momFederateObjects.put( federate, ocInstance );
 
 		// queue up the discovery
 		// skip if this is a federation restore because discoveries will have already been sent
@@ -164,13 +209,18 @@ public class MomManager implements SaveRestoreTarget
 		if( enabled == false )
 			return;
 		
-		// find the OCInstance that represents the federate
-		MomFederate momFederate = momFederation.removeFederate( federate.getFederateHandle() );
-		
-		// queue up the remove notice
-		DeleteObject delete = new DeleteObject( momFederate.federateObject.getHandle(),new byte[0]);
-		delete.setSourceFederate( PorticoConstants.RTI_HANDLE );
-		lrcState.getQueue().offer( delete );
+		// queue up the delete notice in case we were listening
+		OCInstance ocInstance = momFederateObjects.remove( federate );
+		if( ocInstance != null )
+		{
+			DeleteObject delete = new DeleteObject( ocInstance.getHandle(), new byte[0] );
+			delete.setSourceFederate( PorticoConstants.RTI_HANDLE );
+			lrcState.getQueue().offer( delete );
+		}
+		else
+		{
+			logger.warn( "Federate resigned, but no MOM object for it: "+federate.getFederateName() );
+		}
 	}
 
 	private OCMetadata getFederationClass()
@@ -199,6 +249,7 @@ public class MomManager implements SaveRestoreTarget
 			case IEEE1516e:
 				return lrcState.getFOM().getObjectClass( "HLAmanager.HLAfederate" );
 			default:
+				System.out.println( "CRAP" );
 				return null;
 		}
 	}
@@ -213,17 +264,12 @@ public class MomManager implements SaveRestoreTarget
 	public UpdateAttributes updateFederateMomObject( int federateHandle, Set<Integer> attributes )
 		throws JAttributeNotDefined, JRTIinternalError
 	{
-		// find the federate associated with this federate handle
-		MomFederate momFederate = momFederation.getFederate( federateHandle );
-		if( momFederate != null )
-		{
-			return momFederate.generateUpdate( hlaVersion, attributes );
-		}
-		else
-		{
-			throw new JRTIinternalError( "Requested update unknown MomFederate: handle="+
-			                             federateHandle );
-		}
+		// find the federate info in the LRC
+		Federate federate = lrcState.getKnownFederate( federateHandle );
+		if( federate == null )
+			throw new JRTIinternalError( "Rquested MOM update for unknown federate: handle="+federateHandle );
+		
+		return momFederate.generateUpdate( federate, attributes );		
 	}
 	
 	/**
@@ -233,7 +279,7 @@ public class MomManager implements SaveRestoreTarget
 	public UpdateAttributes updateFederationMomObject( Set<Integer> attributes )
 		throws JAttributeNotDefined
 	{
-		return momFederation.generateUpdate( hlaVersion, attributes );
+		return momFederation.generateUpdate( lrcState.getFederation(), attributes );
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +297,7 @@ public class MomManager implements SaveRestoreTarget
 		try
 		{
 			this.isRestore = true;
-    		momFederation.clear();
+    		reinitialize();
     		for( Federate federate : lrcState.getFederation() )
     			federateJoinedFederation( federate );
 		}

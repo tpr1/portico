@@ -59,36 +59,63 @@ public class CreateFederationHandler extends LRCMessageHandler
 	{
 		CreateFederation request = context.getRequest( CreateFederation.class, this );
 		
-		// try and parse each of the fed files that we have
+		// check that we don't have a null name
+		if( request.getFederationName() == null )
+			throw new JRTIinternalError( "Can't create a federation with null name" );
+
+		//
+		// 1. Parse all the FOM fragments
+		//
+		// try and parse each of the fragments we have been given
 		List<ObjectModel> foms = new ArrayList<ObjectModel>();
 		for( URL module : request.getFomModules() )
 			foms.add( FomParser.parse(module) );
 		
-		// -- NOT DONE ANY MORE --
-		// Used to be important, but we will manually insert the MOM with handles we can control
-		// check to make sure we have the standard MIM as well - if not, load it
-		// validateStandardMimPresent( foms );
+		//
+		// 2. Check for the MIM
+		//
+		// if it isn't already loaded, graft in the MIM
+		// Check all modules to see if any are the MIM. If they aren't, load it, otherwise skip
+		loadStandardMim( foms );
+		
+		//
+		// 3. Merge the modules
+		//
+		ObjectModel combined = ModelMerger.merge( foms );
+		request.setModel( combined );
 
-		// merge the modules together
-		ObjectModel combinedFOM = ModelMerger.merge( foms );
-		
-		// Now we have a single .. super model (which may include the MIM) we can post-process.
-		// Ditch the MIM if it is present and then re-insert with specific handles so that we can
-		// look up MOM handles without using names (thus support cross spec-version naming schemes).
-		ObjectModel.mommify( combinedFOM );
-
-		// we have our grand unified FOM!
-		request.setModel( combinedFOM );
-		
-		// check that we don't have a null name
-		if( request.getFederationName() == null )
-			throw new JRTIinternalError( "Can't create a federation with null name" );
-		
-		// log the request and pass it on to the connection
+		//
+		// 4. Create the Federation
+		//
 		logger.debug( "ATTEMPT Create federation execution [" + request.getFederationName() + "]" );
 		connection.createFederation( request );
 		context.success();
 		logger.info( "SUCCESS Created federation execution [" + request.getFederationName() + "]" );
+	}
+
+	/**
+	 * Check the given set of models to see if any represent the standard MIM.
+	 * If the MIM is present, return. If the MIM isn't present, load it from our system
+	 * resources and add it to the set of models.
+	 */
+	private void loadStandardMim( List<ObjectModel> foms ) throws Exception
+	{
+		for( ObjectModel fragment : foms )
+		{
+			if( fragment.getPrivilegeToDelete() != ObjectModel.INVALID_HANDLE )
+			{
+				if( fragment.getObjectClass("HLAmanager") != null ||
+					fragment.getInteractionClass("HLAmanager") != null )
+				{
+					return; // found it! nothing more to do
+				}
+			}
+		}
+
+		// if we get here, we didn't find the MIM in the given set of FOM fragments
+		logger.debug( "Standard MIM not present - adding it" );
+		URL mim = ClassLoader.getSystemResource( "etc/ieee1516e/HLAstandardMIM.xml" );
+		foms.add( 0, FomParser.parse(mim) );
 	}
 
 	//private void validateStandardMimPresent( List<ObjectModel> foms ) throws Exception

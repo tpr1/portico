@@ -1,5 +1,5 @@
 /*
- *   Copyright 2009 The Portico Project
+ *   Copyright 2016 The Portico Project
  *
  *   This file is part of portico.
  *
@@ -15,25 +15,27 @@
 package org.portico.lrc.services.mom.data;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.portico.impl.HLAVersion;
 import org.portico.impl.hla1516e.types.HLA1516eHandle;
 import org.portico.impl.hla1516e.types.encoding.HLA1516eBoolean;
 import org.portico.impl.hla1516e.types.encoding.HLA1516eUnicodeString;
 import org.portico.lrc.PorticoConstants;
-import org.portico.lrc.compat.JAttributeNotDefined;
 import org.portico.lrc.compat.JEncodingHelpers;
+import org.portico.lrc.compat.JRTIinternalError;
 import org.portico.lrc.management.Federate;
-import org.portico.lrc.model.Mom;
-import org.portico.lrc.model.OCInstance;
+import org.portico.lrc.model.ACMetadata;
+import org.portico.lrc.model.OCMetadata;
+import org.portico.lrc.model.ObjectModel;
 import org.portico.lrc.services.object.msg.UpdateAttributes;
 
 /**
- * Contains links between the {@link OCInstance} used to represent the federate in the federation
- * and the {@link Federate} management object that holds all the information. This class also
- * serializes the information for updates when they are requested.
+ * This class caches the handles for the MOM class <code>HLAmanager.HLAfederate</code>.
+ * <br/>
+ * It's primary job is to take a {@link Federate} instance and generate a Map<Integer,byte[]>
+ * that can be used in an attribute reflection containing MOM information about the federate.
  */
 public class MomFederate
 {
@@ -42,322 +44,422 @@ public class MomFederate
 	//----------------------------------------------------------
 
 	//----------------------------------------------------------
+	//                      ENUMERATIONS
+	//----------------------------------------------------------
+	private enum Attribute
+	{
+		FederateHandle("FederateHandle","HLAfederateHandle"),
+		FederateName(null,"HLAfederateName"),                        // 1516e
+		FederateType("FederateType","HLAfederateType"),
+		FederateHost("FederateHost","HLAfederateHost"),
+		FomModuleDesignatorList(null,"HLAFOMmoduleDesignatorList"),  // 1516e
+		RtiVersion("RTIversion",null),
+		FedID("FEDid",null),
+		TimeConstrained("TimeConstrained","HLAtimeConstrained"),
+		TimeRegulating("TimeRegulating","HLAtimeRegulating"),
+		AsynchronousDelivery("AsynchronousDelivery","HLAasynchronousDelivery"),
+		FederateState("FederateState","HLAfederateState"),
+		TimeManagerState("TimeManagerState","HLAtimeManagerState"),
+		LogicalTime("FederateTime","HLAlogicalTime"),
+		Lookahead("Lookahead","HLAlookahead"),
+		LBTS("LBTS",null), // synonym for LITS
+		GALT(null,"HLAGALT"),
+		LITS("NextMinEventTime","HLALITS"), // NextMinEventTime in 1.3,
+		ROlength("ROlength","HLAROlength"),
+		TSOlength("TSOlength","HLATSOlength"),
+		ReflectionsReceived("ReflectionsReceived","HLAreflectionsReceived"),
+		UpdatesSent("UpdatesSent","HLAupdatesSent"),
+		InteractionsReceived("InteractionsReceived","HLAinteractionsReceived"),
+		InteractionsSent("InteractionsSent","HLAinteractionsSent"),
+		ObjectInstancesThatCanBeDeleted("ObjectsOwned","HLAobjectInstancesThatCanBeDeleted"), // ObjectsOwned in 1.3
+		ObjectInstancesUpdated("ObjectsUpdated","HLAobjectInstancesUpdated"),                 // ObjectsUpdated in 1.3
+		ObjectInstancesReflected("ObjectsReflected","HLAobjectInstancesReflected"),           // ObjectsReflected in 1.3
+		ObjectInstancesDeleted(null,"HLAobjectInstancesDeleted"),
+		ObjectInstancesRemoved(null,"HLAobjectInstancesRemoved"),
+		ObjectInstancesRegistered(null,"HLAobjectInstancesRegistered"),
+		ObjectInstancesDiscovered(null,"HLAobjectInstancesDiscovered"),
+		TimeGrantedTime(null,"HLAtimeGrantedTime"),
+		TimeAdvancingTime(null,"HLAtimeAdvancingTime"),
+		ConveyProducingFederate(null,"HLAconveyRegionDesignatorSets"),        // 1516e 
+		ConveyRegionDesignatorSets(null,"HLAconveyProducingFederate");        // 1516e
+		
+		private final String hla13;
+		private final String ieee1516e; 
+		private Attribute( String hla13, String ieee1516e )
+		{
+			this.hla13 = hla13;
+			this.ieee1516e = ieee1516e;
+		}
+	}
+
+	//----------------------------------------------------------
 	//                   INSTANCE VARIABLES
 	//----------------------------------------------------------
-	protected OCInstance federateObject;
-	protected Federate federate;
-	protected Logger momLogger;
+	private int classHandle;
+	private Map<Attribute,Integer> handleMap;
+	private HLAVersion targetVersion; // HLA version of the local requesting federate
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	public MomFederate( Federate federate, OCInstance federateObject, Logger momLogger )
+	public MomFederate( HLAVersion federateVersion )
 	{
-		this.federate = federate;
-		this.federateObject = federateObject;
-		this.momLogger = momLogger;
+		this.handleMap = new HashMap<>();
+		this.targetVersion = federateVersion;
 	}
 
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
-	private byte[] getFederateHandle( HLAVersion version )
+	/**
+	 * Fetch all the handles for this type from the MOM information in the given object model.
+	 */
+	public void initialize( ObjectModel objectModel ) throws JRTIinternalError
 	{
-		return encodeHandle( version, federate.getFederateHandle() );
-	}
-
-	private byte[] getFederateType( HLAVersion version )
-	{
-		return encodeString( version, federate.getFederateName() ); // wrong in 1516e
-	}
-	
-	private byte[] getFederateName( HLAVersion version )
-	{
-		return encodeString( version, federate.getFederateName() );
-	}
-
-	private byte[] getFederateHost( HLAVersion version )
-	{
-		return notYetSupported( version, "FederateHost" );
-	}
-	
-	private byte[] getFomModuleDesignatorList( HLAVersion version )
-	{
-		return notYetSupported( version, "FomModuleDesignatorList" );
-	}
-
-	private byte[] getRTIversion( HLAVersion version )
-	{
-		return encodeString( version, PorticoConstants.RTI_NAME+" v"+PorticoConstants.RTI_VERSION );
-	}
-
-	private byte[] getFEDid( HLAVersion version )
-	{
-		return notYetSupported( version, "FDDID" );
-	}
-
-	private byte[] getTimeConstrained( HLAVersion version )
-	{
-		return encodeBoolean( version, federate.getTimeStatus().isConstrained() );
-	}
-
-	private byte[] getTimeRegulating( HLAVersion version )
-	{
-		return encodeBoolean( version, federate.getTimeStatus().isRegulating() );
-	}
-
-	private byte[] getAsynchronousDelivery( HLAVersion version )
-	{
-		return encodeBoolean( version, federate.getTimeStatus().isAsynchronous() );
-	}
-
-	private byte[] getFederateState( HLAVersion version )
-	{
-		return notYetSupported( version, "FederateState" );
-	}
-
-	private byte[] getTimeManagerState( HLAVersion version )
-	{
-		return notYetSupported( version, "TimeManagerState" );
-	}
-
-	private byte[] getFederateTime( HLAVersion version )
-	{
-		return encodeTime( version, federate.getTimeStatus().getCurrentTime() );
-	}
-
-	private byte[] getLookahead( HLAVersion version )
-	{
-		return encodeTime( version, federate.getTimeStatus().getLookahead() );
-	}
-
-	private byte[] getLBTS( HLAVersion version )
-	{
-		return encodeTime( version, federate.getTimeStatus().getLbts() );
-	}
-
-	private byte[] getMinNextEventTime( HLAVersion version )
-	{
-		return getLBTS( version );
-	}
-	
-	private byte[] getGALT( HLAVersion version )
-	{
-		return notYetSupported(version,"GALT");
-	}
-
-	private byte[] getLITS( HLAVersion version )
-	{
-		return notYetSupported(version,"LITS");
-	}
-
-	private byte[] getROlength( HLAVersion version )
-	{
-		return notYetSupported(version,"ROlength");
-	}
-
-	private byte[] getTSOlength( HLAVersion version )
-	{
-		return notYetSupported(version,"TSOlength");
-	}
-
-	private byte[] getReflectionsReceived( HLAVersion version )
-	{
-		return notYetSupported(version,"ReflectionsReceived");
-	}
-
-	private byte[] getUpdatesSent( HLAVersion version )
-	{
-		return notYetSupported(version,"UpdatesSent");
-	}
-
-	private byte[] getInteractionsReceived( HLAVersion version )
-	{
-		return notYetSupported(version,"InteractionsReceived");
-	}
-
-	private byte[] getInteractionsSent( HLAVersion version )
-	{
-		return notYetSupported(version,"InteractionsSent");
-	}
-
-	private byte[] getObjectsOwned( HLAVersion version )
-	{
-		return notYetSupported(version,"ObjectOwned");
-	}
-
-	private byte[] getObjectsUpdated( HLAVersion version )
-	{
-		return notYetSupported(version,"ObjectsUpdated");
-	}
-
-	private byte[] getObjectsReflected( HLAVersion version )
-	{
-		return notYetSupported(version,"ObjectsReflected");
-	}
-
-	private byte[] getObjectInstancesDeleted( HLAVersion version )
-	{
-		return notYetSupported( version, "ObjectInstancedDeleted" );
-	}
-
-	private byte[] getObjectInstancesRemoved( HLAVersion version )
-	{
-		return notYetSupported( version, "ObjectInstancedRemoved" );
-	}
-
-	private byte[] getObjectInstancesRegistered( HLAVersion version )
-	{
-		return notYetSupported( version, "ObjectInstancedRegistered" );
-	}
-
-	private byte[] getObjectInstancesDiscovered( HLAVersion version )
-	{
-		return notYetSupported( version, "ObjectInstancedDiscovered" );
-	}
-
-	private byte[] getTimeGrantedTime( HLAVersion version )
-	{
-		return encodeTime( version, federate.getTimeStatus().getCurrentTime() );
-	}
-
-	private byte[] getTimeAdvancingTime( HLAVersion version )
-	{
-		return encodeTime( version, federate.getTimeStatus().getRequestedTime() );
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////// Update Generating Methods ///////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////
-	public UpdateAttributes generateUpdate( HLAVersion version, Set<Integer> handles )
-		throws JAttributeNotDefined
-	{
-		HashMap<Integer,byte[]> attributes = new HashMap<Integer,byte[]>();
-
-		// loop through the attributes and get the appropriate values
-		for( Integer attributeHandle : handles )
+		// find the HLAfederate class
+		OCMetadata federateClass = objectModel.getObjectClass( "Manager.Federate" );
+		if( federateClass == null )
+			federateClass = objectModel.getObjectClass( "HLAmanager.HLAfederate" );
+		
+		if( federateClass == null )
+			throw new JRTIinternalError( "Could not bootstrap MOM: Missing HLAfederate class" );
+		
+		// pull the class and attribute handles out
+		this.classHandle = federateClass.getHandle();
+		for( Attribute attribute : Attribute.values() )
 		{
-			Mom.Federate enumValue = Mom.Federate.forHandle( attributeHandle );
-			switch( enumValue )
+			ACMetadata temp = federateClass.getDeclaredAttribute( attribute.hla13 );
+			if( temp == null )
+				temp = federateClass.getDeclaredAttribute( attribute.ieee1516e );
+			
+			// if we found this attribute in the FOM, store the handle
+			if( temp != null )
+				this.handleMap.put( attribute, temp.getHandle() );
+		}
+	}
+
+	/**
+	 * Generate an udpate for the requested handles using the given federate as the source.
+	 */
+	public UpdateAttributes generateUpdate( Federate federate, Set<Integer> requested )
+	{
+		HashMap<Integer,byte[]> map = new HashMap<>();
+		
+		for( Attribute attribute : handleMap.keySet() )
+		{
+			int handle = handleMap.get( attribute );
+			if( requested.contains(handle) == false )
+				continue;
+			
+			switch( attribute )
 			{
 				case FederateName:
-					attributes.put( attributeHandle, getFederateName(version) );
+					map.put( handle, getFederateName(federate) );
 					break;
 				case FederateHandle:
-					attributes.put( attributeHandle, getFederateHandle(version) );
+					map.put( handle, getFederateHandle(federate) );
 					break;
 				case FederateType:
-					attributes.put( attributeHandle, getFederateType(version) );
+					map.put( handle, getFederateType(federate) );
 					break;
 				case FederateHost:
-					attributes.put( attributeHandle, getFederateHost(version) );
+					map.put( handle, getFederateHost(federate) );
 					break;
 				case FomModuleDesignatorList:
-					attributes.put( attributeHandle, getFomModuleDesignatorList(version) );
+					map.put( handle, getFomModuleDesignatorList(federate) );
 					break;
 				case RtiVersion:
-					attributes.put( attributeHandle, getRTIversion(version) );
+					map.put( handle, getRTIversion(federate) );
 					break;
 				case FedID:
-					attributes.put( attributeHandle, getFEDid(version) );
+					map.put( handle, getFEDid(federate) );
 					break;
 				case TimeConstrained:
-					attributes.put( attributeHandle, getTimeConstrained(version) );
+					map.put( handle, getTimeConstrained(federate) );
 					break;
 				case TimeRegulating:
-					attributes.put( attributeHandle, getTimeRegulating(version) );
+					map.put( handle, getTimeRegulating(federate) );
 					break;
 				case AsynchronousDelivery:
-					attributes.put( attributeHandle, getAsynchronousDelivery(version) );
+					map.put( handle, getAsynchronousDelivery(federate) );
 					break;
 				case FederateState:
-					attributes.put( attributeHandle, getFederateState(version) );
+					map.put( handle, getFederateState(federate) );
 					break;
 				case TimeManagerState:
-					attributes.put( attributeHandle, getTimeManagerState(version) );
+					map.put( handle, getTimeManagerState(federate) );
 					break;
 				case LogicalTime:
-					attributes.put( attributeHandle, getFederateTime(version) );
+					map.put( handle, getFederateTime(federate) );
 					break;
 				case Lookahead:
-					attributes.put( attributeHandle, getLookahead(version) );
+					map.put( handle, getLookahead(federate) );
 					break;
 				case LBTS:
-					attributes.put( attributeHandle, getLBTS(version) );
+					map.put( handle, getLBTS(federate) );
 					break;
 				case GALT:
-					attributes.put( attributeHandle, getGALT(version) );
+					map.put( handle, getGALT(federate) );
 					break;
 				case LITS:
-					attributes.put( attributeHandle, getLITS(version) );
+					map.put( handle, getLITS(federate) );
 					break;
 				case ROlength:
-					attributes.put( attributeHandle, getROlength(version) );
+					map.put( handle, getROlength(federate) );
 					break;
 				case TSOlength:
-					attributes.put( attributeHandle, getTSOlength(version) );
+					map.put( handle, getTSOlength(federate) );
 					break;
 				case ReflectionsReceived:
-					attributes.put( attributeHandle, getReflectionsReceived(version) );
+					map.put( handle, getReflectionsReceived(federate) );
 					break;
 				case UpdatesSent:
-					attributes.put( attributeHandle, getUpdatesSent(version) );
+					map.put( handle, getUpdatesSent(federate) );
 					break;
 				case InteractionsReceived:
-					attributes.put( attributeHandle, getInteractionsReceived(version) );
+					map.put( handle, getInteractionsReceived(federate) );
 					break;
 				case InteractionsSent:
-					attributes.put( attributeHandle, getInteractionsSent(version) );
+					map.put( handle, getInteractionsSent(federate) );
 					break;
 				case ObjectInstancesThatCanBeDeleted:
-					attributes.put( attributeHandle, getObjectsOwned(version) );
+					map.put( handle, getObjectsOwned(federate) );
 					break;
 				case ObjectInstancesUpdated:
-					attributes.put( attributeHandle, getObjectsUpdated(version) );
+					map.put( handle, getObjectsUpdated(federate) );
 					break;
 				case ObjectInstancesReflected:
-					attributes.put( attributeHandle, getObjectsReflected(version) );
+					map.put( handle, getObjectsReflected(federate) );
 					break;
 				case ObjectInstancesDeleted:
-					attributes.put( attributeHandle, getObjectInstancesDeleted(version) );
+					map.put( handle, getObjectInstancesDeleted(federate) );
 					break;
 				case ObjectInstancesRemoved:
-					attributes.put( attributeHandle, getObjectInstancesRemoved(version) );
+					map.put( handle, getObjectInstancesRemoved(federate) );
 					break;
 				case ObjectInstancesRegistered:
-					attributes.put( attributeHandle, getObjectInstancesRegistered(version) );
+					map.put( handle, getObjectInstancesRegistered(federate) );
 					break;
 				case ObjectInstancesDiscovered:
-					attributes.put( attributeHandle, getObjectInstancesDiscovered(version) );
+					map.put( handle, getObjectInstancesDiscovered(federate) );
 					break;
 				case TimeGrantedTime:
-					attributes.put( attributeHandle, getTimeGrantedTime(version) );
+					map.put( handle, getTimeGrantedTime(federate) );
 					break;
 				case TimeAdvancingTime:
-					attributes.put( attributeHandle, getTimeAdvancingTime(version) );
+					map.put( handle, getTimeAdvancingTime(federate) );
+					break;
+				case ConveyRegionDesignatorSets:
+					map.put( handle, getConveyRegionDesignatorSets(federate) );
+					break;
+				case ConveyProducingFederate:
+					map.put( handle, getConveyProducingFederate(federate) );
 					break;
 				default:
 					break; // ignore
-			}
-			
+			} 
 		}
-		
-		UpdateAttributes update = new UpdateAttributes( federateObject.getHandle(),
-		                                                new byte[0],
-		                                                attributes );
+
+		UpdateAttributes update = new UpdateAttributes( classHandle, new byte[0], map );
 		update.setSourceFederate( PorticoConstants.RTI_HANDLE );
 		return update;
 	}
-	
-	private byte[] notYetSupported( HLAVersion version, String property )
+
+	protected int getClassHandle()
 	{
-		momLogger.trace( "Requeted MOM property that isn't supported yet: Federate." + property );
-		return encodeString( version, "property ["+property+"] not yet supported" );
+		return this.classHandle;
 	}
 
-	private byte[] encodeString( HLAVersion version, String string )
+	//////////////////////////////////////////////////////////////////////////////
+	/// Attribute Encoding Methods    ////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////
+	private byte[] getFederateHandle( Federate federate )
 	{
-		switch( version )
+		return encodeHandle( federate.getFederateHandle() );
+	}
+
+	private byte[] getFederateType( Federate federate )
+	{
+		return encodeString( federate.getFederateName() ); // wrong in 1516e
+	}
+	
+	private byte[] getFederateName( Federate federate )
+	{
+		return encodeString( federate.getFederateName() );
+	}
+
+	private byte[] getFederateHost( Federate federate )
+	{
+		return notYetSupported( "FederateHost" );
+	}
+	
+	private byte[] getFomModuleDesignatorList( Federate federate )
+	{
+		return notYetSupported( "FomModuleDesignatorList" );
+	}
+
+	private byte[] getRTIversion( Federate federate )
+	{
+		return encodeString( PorticoConstants.RTI_NAME+" v"+PorticoConstants.RTI_VERSION );
+	}
+
+	private byte[] getFEDid( Federate federate )
+	{
+		return notYetSupported( "FDDID" );
+	}
+
+	private byte[] getTimeConstrained( Federate federate )
+	{
+		return encodeBoolean( federate.getTimeStatus().isConstrained() );
+	}
+
+	private byte[] getTimeRegulating( Federate federate )
+	{
+		return encodeBoolean( federate.getTimeStatus().isRegulating() );
+	}
+
+	private byte[] getAsynchronousDelivery( Federate federate )
+	{
+		return encodeBoolean( federate.getTimeStatus().isAsynchronous() );
+	}
+
+	private byte[] getFederateState( Federate federate )
+	{
+		return notYetSupported( "FederateState" );
+	}
+
+	private byte[] getTimeManagerState( Federate federate )
+	{
+		return notYetSupported( "TimeManagerState" );
+	}
+
+	private byte[] getFederateTime( Federate federate )
+	{
+		return encodeTime( federate.getTimeStatus().getCurrentTime() );
+	}
+
+	private byte[] getLookahead( Federate federate )
+	{
+		return encodeTime( federate.getTimeStatus().getLookahead() );
+	}
+
+	private byte[] getLBTS( Federate federate )
+	{
+		return encodeTime( federate.getTimeStatus().getLbts() );
+	}
+
+	private byte[] getMinNextEventTime( Federate federate )
+	{
+		return getLBTS( federate );
+	}
+	
+	private byte[] getGALT( Federate federate )
+	{
+		return notYetSupported("GALT");
+	}
+
+	private byte[] getLITS( Federate federate )
+	{
+		return notYetSupported("LITS");
+	}
+
+	private byte[] getROlength( Federate federate )
+	{
+		return notYetSupported("ROlength");
+	}
+
+	private byte[] getTSOlength( Federate federate )
+	{
+		return notYetSupported("TSOlength");
+	}
+
+	private byte[] getReflectionsReceived( Federate federate )
+	{
+		return notYetSupported("ReflectionsReceived");
+	}
+
+	private byte[] getUpdatesSent( Federate federate )
+	{
+		return notYetSupported("UpdatesSent");
+	}
+
+	private byte[] getInteractionsReceived( Federate federate )
+	{
+		return notYetSupported("InteractionsReceived");
+	}
+
+	private byte[] getInteractionsSent( Federate federate )
+	{
+		return notYetSupported("InteractionsSent");
+	}
+
+	private byte[] getObjectsOwned( Federate federate )
+	{
+		return notYetSupported("ObjectOwned");
+	}
+
+	private byte[] getObjectsUpdated( Federate federate )
+	{
+		return notYetSupported("ObjectsUpdated");
+	}
+
+	private byte[] getObjectsReflected( Federate federate )
+	{
+		return notYetSupported("ObjectsReflected");
+	}
+
+	private byte[] getObjectInstancesDeleted( Federate federate )
+	{
+		return notYetSupported( "ObjectInstancedDeleted" );
+	}
+
+	private byte[] getObjectInstancesRemoved( Federate federate )
+	{
+		return notYetSupported( "ObjectInstancedRemoved" );
+	}
+
+	private byte[] getObjectInstancesRegistered( Federate federate )
+	{
+		return notYetSupported( "ObjectInstancedRegistered" );
+	}
+
+	private byte[] getObjectInstancesDiscovered( Federate federate )
+	{
+		return notYetSupported( "ObjectInstancedDiscovered" );
+	}
+
+	private byte[] getTimeGrantedTime( Federate federate )
+	{
+		return encodeTime( federate.getTimeStatus().getCurrentTime() );
+	}
+
+	private byte[] getTimeAdvancingTime( Federate federate )
+	{
+		return encodeTime( federate.getTimeStatus().getRequestedTime() );
+	}
+	
+	private byte[] getConveyRegionDesignatorSets( Federate federate )
+	{
+		return encodeBoolean( true );
+	}
+	
+	private byte[] getConveyProducingFederate( Federate federate )
+	{
+		return encodeBoolean( true );
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////
+	/// MOM Encoding Methods    //////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////
+	private byte[] notYetSupported( String property )
+	{
+		//momLogger.trace( "Requeted MOM property that isn't supported yet: Federate." + property );
+		return encodeString( "property ["+property+"] not yet supported" );
+	}
+
+	private byte[] encodeString( String string )
+	{
+		switch( targetVersion )
 		{
 			case HLA13:
 				return JEncodingHelpers.encodeString( string );
@@ -366,13 +468,13 @@ public class MomFederate
 			case IEEE1516:
 				return new HLA1516eUnicodeString(string).toByteArray();
 			default:
-				throw new IllegalArgumentException( "Unknown Spec Version: "+version );
+				throw new IllegalArgumentException( "Unknown Spec Version: "+targetVersion );
 		}
 	}
 	
-	private byte[] encodeHandle( HLAVersion version, int handle )
+	private byte[] encodeHandle( int handle )
 	{
-		switch( version )
+		switch( targetVersion )
 		{
 			case HLA13:
 				return JEncodingHelpers.encodeString( ""+handle );
@@ -381,13 +483,13 @@ public class MomFederate
 			case IEEE1516:
 				return new HLA1516eHandle(handle).getBytes();
 			default:
-				throw new IllegalArgumentException( "Unknown Spec Version: "+version );
+				throw new IllegalArgumentException( "Unknown Spec Version: "+targetVersion );
 		}
 	}
 
-	private byte[] encodeBoolean( HLAVersion version, boolean value )
+	private byte[] encodeBoolean( boolean value )
 	{
-		switch( version )
+		switch( targetVersion )
 		{
 			case HLA13:
 				return JEncodingHelpers.encodeString( ""+value );
@@ -396,13 +498,13 @@ public class MomFederate
 			case IEEE1516:
 				return new HLA1516eBoolean(value).toByteArray();
 			default:
-				throw new IllegalArgumentException( "Unknown Spec Version: "+version );
+				throw new IllegalArgumentException( "Unknown Spec Version: "+targetVersion );
 		}
 	}
 	
-	private byte[] encodeTime( HLAVersion version, double time )
+	private byte[] encodeTime( double time )
 	{
-		switch( version )
+		switch( targetVersion )
 		{
 			case HLA13:
 				return JEncodingHelpers.encodeString( ""+time );
@@ -411,10 +513,10 @@ public class MomFederate
 			case IEEE1516:
 				return new org.portico.impl.hla1516.types.DoubleTime(time).toByteArray();
 			default:
-				throw new IllegalArgumentException( "Unknown Spec Version: "+version );
+				throw new IllegalArgumentException( "Unknown Spec Version: "+targetVersion );
 		}
 	}
-
+	
 	//----------------------------------------------------------
 	//                     STATIC METHODS
 	//----------------------------------------------------------

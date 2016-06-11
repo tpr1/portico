@@ -377,7 +377,7 @@ public class ModelMerger
 		if( objectRoot.getDeclaredAttributeCount() == 0 )
 			model.addPrivilegeToDeleteIfNotPresent();
 		
-		// ensure that HLAinteractionRoot is present
+		// TODO ensure that HLAinteractionRoot is present
 		// TBC
 		return model;
 	}
