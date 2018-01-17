@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Properties;
 
+import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.MessageRetractionReturn;
@@ -47,6 +48,8 @@ import org.portico.impl.hla1516e.types.HLA1516eRegionHandleSet;
 import org.portico.impl.hla1516e.types.HLA1516eTransportationTypeHandleFactory;
 import org.portico.impl.hla1516e.types.time.DoubleTime;
 import org.portico.impl.hla1516e.types.time.DoubleTimeInterval;
+
+import org.portico.lrc.model.datatype.*;
 
 /**
  * This class is provided as the simplified JNI link to C++ code in the interface binding.
@@ -2170,7 +2173,27 @@ public class ProxyRtiAmbassador
 			return "UNKNOWN";
 		}
 	}
-
+	
+	public IDatatype getAttributeDatatype(ObjectClassHandle classHandle, AttributeHandle attributeHandle)
+	{
+		return new BasicType("name", 4, Endianness.LITTLE);
+	}
+	
+	public IDatatype getDatatypeByName(String name)
+	{
+		return new BasicType("name", 4, Endianness.LITTLE);
+	}
+	
+	public int getParameterDatatype(int classHandle, int attributeHandle)
+	{
+		return 444;
+	}
+	
+	public String getFom()
+	{
+		return rtiamb.getFOM().getDatatypes().toString();
+	}
+	
 	private void notSupported( String name )
 	{
 		logger.warn( "Method "+name+" is not yet supported by the C++ interface" );
