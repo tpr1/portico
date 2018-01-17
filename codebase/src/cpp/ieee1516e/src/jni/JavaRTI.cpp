@@ -427,7 +427,16 @@ void JavaRTI::cacheMethodIds() throw( RTIinternalError )
 	cacheMethod( jnienv, &GET_HLA_VERSION, "getHLAversion", "()Ljava/lang/String;" );
 	//cacheMethod( jnienv, &KILL, "", "" );
 
+	//custom portico
+	cacheMethod(jnienv, &GET_ATTRIBUTE_DATATYPE, "getAttributeDatatype", "(Lhla/rti1516e/ObjectClassHandle;Lhla/rti1516e/AttributeHandle;)Lorg/portico/lrc/model/datatype/IDatatype;");
+	cacheMethod(jnienv, &GET_PARAMETER_DATATYPE, "getParameterDatatype", "(II)I");
+	cacheMethod(jnienv, &GET_DATATYPE_BY_NAME, "getDatatypeByName", "(Ljava/lang/String;)Lorg/portico/lrc/model/datatype/IDatatype;");
+	cacheMethod(jnienv, &GET_FOM, "getFom", "()Ljava/lang/String;");
+
+
 	logger->trace( "Cached RTIambassador method ids" );
+
+
 	
 //	logger->trace( "Caching Region method ids" );
 //	cacheMethod( jnienv, &REGION_GET_NUMBER_OF_EXTENTS, jregionClass, "getNumberOfExtents", "()J" );

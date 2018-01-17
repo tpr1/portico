@@ -21,7 +21,7 @@
 
 PORTICO1516E_NS_START
 
-class PorticoRtiAmbassador : public RTIambassador
+class PorticoRtiAmbassador : public virtual RTIambassador
 {
 	//----------------------------------------------------------
 	//                    STATIC VARIABLES
@@ -31,7 +31,7 @@ class PorticoRtiAmbassador : public RTIambassador
 	//----------------------------------------------------------
 	//                   INSTANCE VARIABLES
 	//----------------------------------------------------------
-	private:
+	protected:
 		JavaRTI *javarti;
 		Logger *logger;
 

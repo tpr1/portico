@@ -17,6 +17,7 @@
 namespace rti1516e
 {
    class RTIambassador;
+   class RTIambassadorEx;
 }
 
 namespace std
@@ -41,8 +42,10 @@ namespace rti1516e
 
       // 10.35
       std::auto_ptr< RTIambassador > createRTIambassador ()
-         throw (
-            RTIinternalError);
+		  throw ( RTIinternalError );
+
+	  std::auto_ptr< rti1516e::RTIambassadorEx > createRTIambassadorEx ()
+		  throw ( RTIinternalError );
    };
 }
 
