@@ -45,7 +45,7 @@ public:
               IDatatype* discriminantDatatype,
               std::list<Alternative>  alternatives);
 
-    ~VariantRecordType();
+    virtual ~VariantRecordType();
  
     /////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////// VariantRecordType Interface ////////////////////////////////

@@ -6,8 +6,12 @@
 
 class RTI_EXPORT IDatatype
 {
-public:
+
+protected:
 	IDatatype(){}
+
+public:
+	virtual ~IDatatype(){}
 
 	/**
 	* Returns the name of this datatype.
