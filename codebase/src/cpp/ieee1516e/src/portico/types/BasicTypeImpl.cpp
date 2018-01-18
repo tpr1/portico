@@ -10,6 +10,11 @@ BasicType::BasicType(const std::string& name, int size, Endianness endianness)
     this->endianness = endianness;
 }
 
+BasicType::~BasicType()
+{
+}
+
+
 Endianness BasicType::getEndianness()
 {
 	return this->endianness;

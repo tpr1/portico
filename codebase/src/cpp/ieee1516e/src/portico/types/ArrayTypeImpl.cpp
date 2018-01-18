@@ -21,6 +21,11 @@ ArrayType::ArrayType(const std::string& name, IDatatype *datatype, const std::li
     this->datatype = datatype;
     this->dimensions = dimensions;
 }
+
+ArrayType::~ArrayType()
+{
+
+}
  
 
 IDatatype* ArrayType::getDatatype()

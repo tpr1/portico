@@ -1,53 +1,50 @@
-#include "portico/PorticoRtiAmbassadorEx.h"
+#include "rtiamb/PorticoRtiAmbassador.h"
 #include "RTI/portico/types/BasicType.h"
 #include "jni/JniUtils.h"
 
 
-//ObjectModel PorticoRtiAmbassadorEx::getFom()
-//{
-//	return ObjectModel();
-//}
 PORTICO1516E_NS_START
 
-	PorticoRtiAmbassadorEx::PorticoRtiAmbassadorEx() : PorticoRtiAmbassador()
+	std::auto_ptr<IDatatype> PorticoRtiAmbassador::getAttributeDatatype( ObjectClassHandle whichClass,
+																		 AttributeHandle theHandle)
+		throw ( InteractionParameterNotDefined,
+				InvalidParameterHandle,
+				InvalidInteractionClassHandle,
+				FederateNotExecutionMember,
+				NotConnected,
+				RTIinternalError )
 	{
 
-	}
-
-	PorticoRtiAmbassadorEx::~PorticoRtiAmbassadorEx()
-	{
-
-	}
-
-
-	std::auto_ptr<IDatatype> PorticoRtiAmbassadorEx::getAttributeDatatype(ObjectClassHandle whichClass,
-												                          AttributeHandle theHandle)
-	{
-
-		// call to cache. Use handle as key ?
-                    
-        return  std::auto_ptr<IDatatype>(new BasicType("name", 4, Endianness::LITTLE));
+		// call to cache. Use handle as key ?                    
+        return  std::auto_ptr<IDatatype>( new BasicType("name", 4, Endianness::LITTLE ));
 	}
 
 
-	std::auto_ptr<IDatatype>  PorticoRtiAmbassadorEx::getParameterDatatype(InteractionClassHandle whichClass,
-													                       ParameterHandle theHandle)
+	std::auto_ptr<IDatatype> PorticoRtiAmbassador::getParameterDatatype( InteractionClassHandle whichClass,
+																		 ParameterHandle theHandle)
+		throw ( InteractionParameterNotDefined,
+				InvalidParameterHandle,
+				InvalidInteractionClassHandle,
+				FederateNotExecutionMember,
+				NotConnected,
+				RTIinternalError )
 	{
         // call to cache. Use handle as key ?
 
 		return std::auto_ptr<IDatatype>(new BasicType("name", 4, Endianness::LITTLE) );
 	}
 
-    std::string PorticoRtiAmbassadorEx::getFom()
+	std::wstring PorticoRtiAmbassador::getFom()
+		throw ( NotConnected,
+				RTIinternalError )
     {
         // Get active environment
         JNIEnv* jnienv = this->javarti->getJniEnvironment();
 
-        // call the method
-        jstring fom = (jstring)jnienv->CallObjectMethod(javarti->jproxy,
-            javarti->GET_FOM );
+        // call the method andConvert to a string		
+		wstring fomString = JniUtils::toWideString(jnienv, (jstring)jnienv->CallObjectMethod(javarti->jproxy, javarti->GET_FOM));
 
-        return JniUtils::toString(jnienv, fom);
+		return fomString;
     }
 
 PORTICO1516E_NS_END

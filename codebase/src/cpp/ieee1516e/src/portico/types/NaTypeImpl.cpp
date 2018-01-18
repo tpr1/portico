@@ -5,7 +5,8 @@
  
 NaType::NaType()
 {}
-
+NaType::~NaType()
+{}
  
 std::string NaType::getName() const
 {

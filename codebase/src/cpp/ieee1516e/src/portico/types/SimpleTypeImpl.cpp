@@ -9,6 +9,10 @@ SimpleType::SimpleType(const std::string& name, std::string representation)
     this->representation = representation;
 }
 
+SimpleType::~SimpleType()
+{
+}
+
 std::string SimpleType::getName() const
 {
 	return this->name;
