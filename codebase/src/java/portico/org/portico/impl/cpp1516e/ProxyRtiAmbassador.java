@@ -2191,7 +2191,7 @@ public class ProxyRtiAmbassador
 	
 	public String getFom()
 	{
-		return rtiamb.getFOM().getDatatypes().toString();
+		return rtiamb.getFOM().toString();
 	}
 	
 	private void notSupported( String name )
