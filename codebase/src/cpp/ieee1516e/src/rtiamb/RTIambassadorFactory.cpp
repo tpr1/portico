@@ -13,8 +13,7 @@
  *
  */
 #include "common.h"
-#include "rtiamb/PorticoRtiAmbassador.h"
-#include "portico/PorticoRtiAmbassadorEx.h"
+#include "rtiamb/PorticoRtiAmbassador.h" 
 
 IEEE1516E_NS_START
 
@@ -37,9 +36,9 @@ std::auto_ptr<RTIambassador> RTIambassadorFactory::createRTIambassador() throw( 
 	return auto_ptr<RTIambassador>( new PORTICO1516E_NS::PorticoRtiAmbassador() );
 }
 
-std::auto_ptr<rti1516e::RTIambassadorEx> RTIambassadorFactory::createRTIambassadorEx() throw( RTIinternalError )
+std::auto_ptr<RTIambassadorEx> RTIambassadorFactory::createRTIambassadorEx() throw( RTIinternalError )
 {
-	return auto_ptr<rti1516e::RTIambassadorEx>( new PORTICO1516E_NS::PorticoRtiAmbassadorEx() );
+	return auto_ptr<RTIambassadorEx>( new PORTICO1516E_NS::PorticoRtiAmbassador() );
 }
 
 //------------------------------------------------------------------------------------------

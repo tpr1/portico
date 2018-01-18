@@ -20,7 +20,7 @@
 #define RTI_1516_h
 
 // Identification of the API version number.
-#define HLA_SPECIFICATION_NAME "1516"
+#define HLA_SPECIFICATION_NAME "1516e"
 #define HLA_API_MAJOR_VERSION 2
 #define HLA_API_MINOR_VERSION 0
 

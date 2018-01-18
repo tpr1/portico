@@ -21,25 +21,30 @@ namespace rti1516e
 
 		/*ObjectModel getFom();*/
 
-		virtual std::auto_ptr<IDatatype> getAttributeDatatype(ObjectClassHandle whichClass,
-		                                 AttributeHandle theHandle)
-			throw(AttributeNotDefined,
+		virtual std::auto_ptr<IDatatype> getAttributeDatatype( ObjectClassHandle whichClass,
+															   AttributeHandle theHandle )
+			throw ( 
+				AttributeNotDefined,
 				InvalidAttributeHandle,
 				InvalidObjectClassHandle,
 				FederateNotExecutionMember,
 				NotConnected,
-				RTIinternalError) = 0 ;
+				RTIinternalError ) = 0 ;
 
 
-		virtual std::auto_ptr<IDatatype> getParameterDatatype(InteractionClassHandle whichClass,
-		                                 ParameterHandle theHandle)
-			throw (InteractionParameterNotDefined,
+		virtual std::auto_ptr<IDatatype> getParameterDatatype( InteractionClassHandle whichClass,
+															   ParameterHandle theHandle )
+			throw ( 
+				InteractionParameterNotDefined,
 				InvalidParameterHandle,
 				InvalidInteractionClassHandle,
 				FederateNotExecutionMember,
 				NotConnected,
-				RTIinternalError) = 0;
+				RTIinternalError ) = 0;
 
-        virtual std::string getFom() = 0;
+        virtual std::wstring getFom() 
+			throw ( 
+				NotConnected,
+				RTIinternalError) = 0;
 	};
 }

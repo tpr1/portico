@@ -53,7 +53,6 @@
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\jni\org_portico_impl_cpp1516e_ExceptionManager.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\jni\Runtime.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\platform\vc8\stdint.h" />
-    <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\portico\PorticoRtiAmbassadorEx.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\rtiamb\PorticoRtiAmbassador.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\types\encoding\aggregate\AggregateTypeImpl.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\src\types\encoding\basic\BasicTypeImpl.h" />
