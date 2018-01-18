@@ -25,7 +25,7 @@ using namespace std;
 class ExampleCPPFederate
 {
 	public:
-		RTIambassador *rtiamb;
+		RTIambassadorEx *rtiamb;
 		ExampleFedAmb *fedamb;
 
 		// fom handles //

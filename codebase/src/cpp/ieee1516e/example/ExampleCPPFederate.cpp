@@ -19,6 +19,7 @@
 
 #include "ExampleFedAmb.h"
 #include "ExampleCPPFederate.h"
+#include "RTI/portico/types/BasicType.h"
 #include <string>
 
 #if __linux__
@@ -51,7 +52,7 @@ void ExampleCPPFederate::runFederate( std::wstring federateName )
 	// 1. create the RTIambassador //
 	/////////////////////////////////
 	RTIambassadorFactory factory = RTIambassadorFactory();
-	this->rtiamb = factory.createRTIambassador().release();
+	this->rtiamb = factory.createRTIambassadorEx().release();
 
 	///////////////////////////
 	// 2. connect to the RTI //
@@ -192,6 +193,12 @@ void ExampleCPPFederate::runFederate( std::wstring federateName )
 		wcout << L"Time Advanced to " << fedamb->federateTime << endl;
 	}
 
+	wcout << L"Trouble maker" << endl;
+	std::wstring fomBack = rtiamb->getFom();
+	wcout << L"FOM test " << fomBack << endl;
+	auto newtype = rtiamb->getAttributeDatatype(this->sodaHandle, this->flavourHandle);
+	cout << newtype->getName() << " NAME " << endl;
+	//wcout << rtiName() << " version : " << rtiVersion() <<endl;
 	//////////////////////////////////////
 	// 11. delete the object we created //
 	//////////////////////////////////////
@@ -228,11 +235,11 @@ void ExampleCPPFederate::runFederate( std::wstring federateName )
 	/////////////////////////////////
 	// disconnect from the RTI
 	this->rtiamb->disconnect();
-
+ 
 	//////////////////
 	// 15. clean up //
 	//////////////////
-	delete this->rtiamb;
+	delete this->rtiamb; 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -244,6 +251,8 @@ void ExampleCPPFederate::runFederate( std::wstring federateName )
 void ExampleCPPFederate::initializeHandles()
 {
 	this->sodaHandle = rtiamb->getObjectClassHandle( L"HLAobjectRoot.Food.Drink.Soda" );
+	//wcout << "class name is : " << rtiamb->getObjectClassName(this->sodaHandle) << endl;
+
 	this->numberOfCupsHandle = rtiamb->getAttributeHandle( sodaHandle, L"NumberCups" );
 	this->flavourHandle = rtiamb->getAttributeHandle( sodaHandle, L"Flavor" ); 
 
