@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Properties;
+ 
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.CallbackModel;
@@ -2191,7 +2192,8 @@ public class ProxyRtiAmbassador
 	
 	public String getFom()
 	{
-		return rtiamb.getFOM().toString();
+ 
+		return rtiamb.getFOM().toXmlDocument();
 	}
 	
 	private void notSupported( String name )
