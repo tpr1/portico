@@ -19,6 +19,7 @@
 #include "jni/Runtime.h"
 #include "jni/JavaRTI.h"
 
+
 PORTICO1516E_NS_START
 
 class PorticoRtiAmbassador : public RTIambassadorEx 
@@ -33,7 +34,7 @@ class PorticoRtiAmbassador : public RTIambassadorEx
 	//----------------------------------------------------------
 	private:
 		JavaRTI *javarti;
-		Logger *logger;
+		Logger *logger; 
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -1580,7 +1581,7 @@ class PorticoRtiAmbassador : public RTIambassadorEx
 		           NotConnected,
 		           RTIinternalError );
 
-		std::auto_ptr<IDatatype> getAttributeDatatype(ObjectClassHandle whichClass,
+		IDatatype* getAttributeDatatype(ObjectClassHandle whichClass,
 			AttributeHandle theHandle)
 			throw ( AttributeNotDefined,
 					InvalidAttributeHandle,
@@ -1590,7 +1591,7 @@ class PorticoRtiAmbassador : public RTIambassadorEx
 					RTIinternalError);
 
 
-		std::auto_ptr<IDatatype> getParameterDatatype(InteractionClassHandle whichClass,
+		IDatatype* getParameterDatatype(InteractionClassHandle whichClass,
 			ParameterHandle theHandle)
 			throw ( InteractionParameterNotDefined,
 				    InvalidParameterHandle,

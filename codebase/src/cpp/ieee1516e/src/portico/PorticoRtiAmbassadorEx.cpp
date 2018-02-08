@@ -1,11 +1,12 @@
 #include "rtiamb/PorticoRtiAmbassador.h"
-#include "RTI/portico/types/BasicType.h"
+#include "RTI\portico\types\BasicType.h"
+#include "portico/DatatypeRetrieval.h"
 #include "jni/JniUtils.h"
 
 
 PORTICO1516E_NS_START
 
-	std::auto_ptr<IDatatype> PorticoRtiAmbassador::getAttributeDatatype( ObjectClassHandle whichClass,
+	IDatatype* PorticoRtiAmbassador::getAttributeDatatype( ObjectClassHandle whichClass,
 																		 AttributeHandle theHandle)
 		throw ( InteractionParameterNotDefined,
 				InvalidParameterHandle,
@@ -15,12 +16,32 @@ PORTICO1516E_NS_START
 				RTIinternalError )
 	{
 
-		// call to cache. Use handle as key ?                    
-        return  std::auto_ptr<IDatatype>( new BasicType("name", 4, Endianness::LITTLE ));
+		JNIEnv* jnienv = this->javarti->getJniEnvironment();
+
+		// Convert handles for call
+		jint classHandle = JniUtils::fromHandle(whichClass);
+		jint attributeHandle = JniUtils::fromHandle(theHandle);
+
+		// Get the class type / name token pair
+		jobjectArray info = (jobjectArray)jnienv->CallObjectMethod(javarti->jproxy,
+														 javarti->GET_ATTRIBUTE_DATATYPE,
+														 classHandle,
+														 attributeHandle);
+	 
+		// Create the string set from the 
+		set<wstring> details =  JniUtils::toWideStringSet(jnienv, info);
+		
+		DatatypeRetrieval* databutler = DatatypeRetrieval::get();
+		if (!databutler->isInitialized())
+		{
+			databutler->initialize(this->getFom());
+		}
+
+		return databutler->getAttributeDatatype((*details.begin()), (*details.rbegin())) ;
 	}
 
 
-	std::auto_ptr<IDatatype> PorticoRtiAmbassador::getParameterDatatype( InteractionClassHandle whichClass,
+	IDatatype* PorticoRtiAmbassador::getParameterDatatype( InteractionClassHandle whichClass,
 																		 ParameterHandle theHandle)
 		throw ( InteractionParameterNotDefined,
 				InvalidParameterHandle,
@@ -31,7 +52,12 @@ PORTICO1516E_NS_START
 	{
         // call to cache. Use handle as key ?
 
-		return std::auto_ptr<IDatatype>(new BasicType("name", 4, Endianness::LITTLE) );
+		//this->getParameterName()
+		// Get active environment
+		
+
+
+		return new BasicType("name", 4, Endianness::LITTLE);
 	}
 
 	std::wstring PorticoRtiAmbassador::getFom()

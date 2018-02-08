@@ -21,7 +21,7 @@ namespace rti1516e
 
 		/*ObjectModel getFom();*/
 
-		virtual std::auto_ptr<IDatatype> getAttributeDatatype( ObjectClassHandle whichClass,
+		virtual IDatatype* getAttributeDatatype( ObjectClassHandle whichClass,
 															   AttributeHandle theHandle )
 			throw ( 
 				AttributeNotDefined,
@@ -32,7 +32,7 @@ namespace rti1516e
 				RTIinternalError ) = 0 ;
 
 
-		virtual std::auto_ptr<IDatatype> getParameterDatatype( InteractionClassHandle whichClass,
+		virtual IDatatype* getParameterDatatype( InteractionClassHandle whichClass,
 															   ParameterHandle theHandle )
 			throw ( 
 				InteractionParameterNotDefined,

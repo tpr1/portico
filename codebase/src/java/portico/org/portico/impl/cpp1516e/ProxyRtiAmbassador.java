@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
  
 
@@ -51,6 +52,7 @@ import org.portico.impl.hla1516e.types.time.DoubleTime;
 import org.portico.impl.hla1516e.types.time.DoubleTimeInterval;
 
 import org.portico.lrc.model.datatype.*;
+ 
 
 /**
  * This class is provided as the simplified JNI link to C++ code in the interface binding.
@@ -2175,9 +2177,27 @@ public class ProxyRtiAmbassador
 		}
 	}
 	
-	public IDatatype getAttributeDatatype(ObjectClassHandle classHandle, AttributeHandle attributeHandle)
+	public String[] getAttributeDatatype(int classHandle, int attributeHandle)
 	{
-		return new BasicType("name", 4, Endianness.LITTLE);
+		String info[] =  null ;
+		
+		ObjectClassHandle newObjectClassHandle = (ObjectClassHandle)new HLA1516eHandle(classHandle);
+		AttributeHandle newAttributeHandle = new HLA1516eHandle(attributeHandle);
+		try
+		{
+			IDatatype type = rtiamb.getAttributeDatatype( newObjectClassHandle, newAttributeHandle );
+			info = new String[] {  type.getName() , type.getDatatypeClass().toString()};
+			 
+		}
+		catch(Exception e)
+		{
+			ExceptionManager.pushException( this.id, e );
+			return info;
+		}
+		
+		return info;
+		
+		//return new BasicType("name", 4, Endianness.LITTLE);
 	}
 	
 	public IDatatype getDatatypeByName(String name)
@@ -2187,6 +2207,7 @@ public class ProxyRtiAmbassador
 	
 	public int getParameterDatatype(int classHandle, int attributeHandle)
 	{
+		//rtiamb.getParameterDatatype( classHandle, attributeHandle );
 		return 444;
 	}
 	
