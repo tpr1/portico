@@ -13,6 +13,7 @@ File: RTI/portico/types/SimpleType.h
 #pragma once
 
 #include "RTI/portico/IDatatype.h" 
+#include "RTI/portico/types/BasicType.h" 
 
 
 /**
@@ -25,7 +26,7 @@ class SimpleType : public virtual IDatatype
 protected:
 
 	std::string	name;			/// The name of this datatype
-	std::string representation; /// BasicType or DatatypePlaceholder only
+	BasicType *representation; /// BasicType or DatatypePlaceholder only
 
 public:
 
@@ -35,7 +36,7 @@ public:
 	 * @param name the name of this data type
 	 * @param representation // BasicType or DatatypePlaceholder only
 	 */
-	SimpleType(const std::string& name, std::string representation);
+	SimpleType(const std::string& name, BasicType *representation);
 	virtual ~SimpleType();
     //////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////// SimpleType representation /////////////////////////

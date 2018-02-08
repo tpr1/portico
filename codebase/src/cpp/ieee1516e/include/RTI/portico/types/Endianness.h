@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 /*
  *   Copyright 2017 The Portico Project
  *
@@ -23,6 +24,8 @@ enum Endianness
 	LITTLE, 
 	BIG
 };
+
+ 
 	
 
 //
