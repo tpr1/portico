@@ -453,6 +453,8 @@ string Runtime::getMode() throw( RTIinternalError )
 {
 #ifdef DEBUG
 	return string("-Dportico.cpp.mode=debug");
+#elif _DEBUG
+	return string("-Dportico.cpp.mode=debug");
 #else
 	return string("-Dportico.cpp.mode=release");
 #endif
