@@ -428,7 +428,7 @@ void JavaRTI::cacheMethodIds() throw( RTIinternalError )
 	//cacheMethod( jnienv, &KILL, "", "" );
 
 	//custom portico
-	cacheMethod(jnienv, &GET_ATTRIBUTE_DATATYPE, "getAttributeDatatype", "(Lhla/rti1516e/ObjectClassHandle;Lhla/rti1516e/AttributeHandle;)Lorg/portico/lrc/model/datatype/IDatatype;");
+	cacheMethod(jnienv, &GET_ATTRIBUTE_DATATYPE, "getAttributeDatatype", "(II)[Ljava/lang/String;");
 	cacheMethod(jnienv, &GET_PARAMETER_DATATYPE, "getParameterDatatype", "(II)I");
 	cacheMethod(jnienv, &GET_DATATYPE_BY_NAME, "getDatatypeByName", "(Ljava/lang/String;)Lorg/portico/lrc/model/datatype/IDatatype;");
 	cacheMethod(jnienv, &GET_FOM, "getFom", "()Ljava/lang/String;");
