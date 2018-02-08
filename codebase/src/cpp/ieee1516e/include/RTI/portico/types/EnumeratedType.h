@@ -14,6 +14,7 @@ File: RTI/portico/types/EnumeratedType.h
 
 #include "RTI/portico/IDatatype.h" 
 #include "RTI/portico/types/Enumerator.h"
+#include "RTI/portico/types/BasicType.h"
 #include <list> 
 
 /**
@@ -27,7 +28,7 @@ class EnumeratedType : public virtual IDatatype
 protected:
 	 
 	std::string	            name;			/// The name of this datatype
-	IDatatype*	            representation;	/// The size of this datatype
+	BasicType*	            representation;	/// The size of this datatype
     std::list<Enumerator*>  enumerators;
 	
 public:
@@ -39,7 +40,7 @@ public:
     * @param representation the type of data that will be stored in instances of this array
     * @param enumerators A list of enumerator names (that will be given default int values ??)
     */
-    EnumeratedType(const std::string& name, IDatatype* representation, std::list<std::string> enumerators);
+	EnumeratedType(const std::string& name, BasicType* representation, std::list<std::string> enumerators);
       
     /**
     * Create a EnumerationType from a list of enumerations.
@@ -48,7 +49,7 @@ public:
     * @param representation the type of data that will be stored in instances of this array
     * @param enumerators A list of enumerator names (that will be given default int values ??)
     */
-    EnumeratedType(const std::string& name, IDatatype* representation, std::list<Enumerator*> enumerators);
+	EnumeratedType(const std::string& name, BasicType* representation, std::list<Enumerator*> enumerators);
  
     virtual ~EnumeratedType();
 
@@ -62,7 +63,7 @@ public:
     * @return The IDatatype representation of this EnumerationType.
     * @see IDatatype
     */
-    virtual IDatatype* getRepresentation();
+	virtual BasicType* getRepresentation();
 
     /**
     * Set the representation associated of this EnumerationType. 
@@ -70,7 +71,7 @@ public:
     * @param representation The IDatatype associated with this EnumerationType.
     * @see IDatatype
     */
-    virtual void setRepresentation(IDatatype *representation);
+	virtual void setRepresentation(BasicType *representation);
 
     /**
     * Get the Enumerators associated with this EnumerationType. 
