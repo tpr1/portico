@@ -267,8 +267,7 @@ class JavaRTI
 
 		//custom portico
 		jmethodID GET_ATTRIBUTE_DATATYPE;
-		jmethodID GET_PARAMETER_DATATYPE;
-		jmethodID GET_DATATYPE_BY_NAME;
+		jmethodID GET_PARAMETER_DATATYPE; 
 		jmethodID GET_FOM;
 };
 
