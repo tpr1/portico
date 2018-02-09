@@ -13,14 +13,13 @@ File: RTI/portico/types/Enumerator.h
 
 #pragma once
 
-#include "RTI/portico/IEnumerator.h"
 #include "RTI/portico/types/Endianness.h"  
 
 
 /**
-* Implementation of the {@link IEnumerator} interface
+*  
 */
-class Enumerator : public virtual IEnumerator
+class Enumerator  
 {
 protected:	 
 
@@ -48,9 +47,6 @@ public:
 	 */
 	virtual bool operator==(const Enumerator& other);
 
-	/////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////// IEnumerator Interface ////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////
 	/**
 	* Returns the name of this datatype.
     * @return The name of this datatype as a string.

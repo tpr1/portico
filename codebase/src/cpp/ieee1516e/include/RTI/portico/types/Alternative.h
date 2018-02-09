@@ -13,7 +13,7 @@ File: RTI/portico/types/Alternative.h
 #pragma once
 
 #include "RTI/portico/IDatatype.h"  
-#include "RTI/portico/IEnumerator.h"
+#include "RTI/portico/types/Enumerator.h"
 #include <list>
 
 /**
@@ -25,7 +25,7 @@ protected:
 	 
 	std::string	            name;		    /// The name of this datatype
 	IDatatype*	            datatype;	    /// The size of this datatype
-    std::list<IEnumerator*> enumerators;    /// The collection of discriminant enumerators that this type is valid for
+    std::list<Enumerator*> enumerators;    /// The collection of discriminant enumerators that this type is valid for
 	
 public:
 
@@ -36,7 +36,7 @@ public:
     * @param datatype The datatype that the alternative will store
     * @param enumerators The collection of discriminant enumerators that this type is valid for
     */
-    Alternative(const std::string& name, IDatatype* datatype, std::list<IEnumerator*> enumerators);
+    Alternative(const std::string& name, IDatatype* datatype, std::list<Enumerator*> enumerators);
  
     virtual ~Alternative();
 
@@ -51,28 +51,13 @@ public:
     * @see IDatatype
     */
     virtual IDatatype* getDatatype();
-
+ 
     /**
-    * Get the IDatatype associated with this array.
-    * @param datatype The IDatatype associated with this ArrayType.
-    * @see IDatatype
+    * Get the list of Enumerator objects associated with this Alternative object.
+    * @return A set of Enumerators associated with this Alternative.
+    * @see Enumerator
     */
-    virtual void setDatatype(IDatatype *datatype);
-
-    /**
-    * Get the list of IEnumerator objects associated with this Alternative object.
-    * @return A set of IEnumerators associated with this Alternative.
-    * @see IEnumerator
-    */
-    virtual std::list<IEnumerator*>& getEnumerators();
-
-    /**
-    * Set the list of IEnumerator objects associated with this Alternative object.
-    * @param A set of IEnumerators to be associated with this Alternative.
-    * @see IEnumerator
-    */
-    virtual void setEnumerators(std::list<IEnumerator*>& enumerators);
-
+    virtual std::list<Enumerator*>& getEnumerators();
  
 	/**
 	* Returns the name of this datatype.

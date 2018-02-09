@@ -14,10 +14,6 @@ Enumerator::~Enumerator()
 
 }
 
-IEnumerator::~IEnumerator()
-{
-
-}
  
 bool Enumerator::operator==(const Enumerator& other)
 {

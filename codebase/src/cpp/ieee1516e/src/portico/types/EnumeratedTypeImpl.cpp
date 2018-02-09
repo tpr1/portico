@@ -2,14 +2,14 @@
 #include "RTI/portico/types/EnumeratedType.h"  
 #include <string>
 
-EnumeratedType::EnumeratedType(const std::string& name, BasicType* representation, std::list<std::string> enumerators)
+EnumeratedType::EnumeratedType(const std::string& name, IDatatype* representation, std::list<std::string> enumerators)
 {
     this->name = name;
     this->representation = representation;
     this->createEnumeratorsFromNames(enumerators);
 }
 
-EnumeratedType::EnumeratedType(const std::string& name, BasicType* representation, std::list<Enumerator*> enumerators)
+EnumeratedType::EnumeratedType(const std::string& name, IDatatype* representation, std::list<Enumerator*> enumerators)
 {
     this->name = name;
     this->representation = representation;
@@ -21,14 +21,9 @@ EnumeratedType::~EnumeratedType()
 
 }
 
-BasicType* EnumeratedType::getRepresentation()
+IDatatype* EnumeratedType::getRepresentation()
 {
     return this->representation;
-}
-
-void EnumeratedType::setRepresentation(BasicType *representation)
-{
-    this->representation = representation;
 }
 
 std::list<Enumerator*>& EnumeratedType::getEnumerators()
