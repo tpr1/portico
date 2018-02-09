@@ -22,7 +22,7 @@ namespace rti1516e
 		/*ObjectModel getFom();*/
 
 		virtual IDatatype* getAttributeDatatype( ObjectClassHandle whichClass,
-															   AttributeHandle theHandle )
+												 AttributeHandle theHandle )
 			throw ( 
 				AttributeNotDefined,
 				InvalidAttributeHandle,
@@ -33,7 +33,7 @@ namespace rti1516e
 
 
 		virtual IDatatype* getParameterDatatype( InteractionClassHandle whichClass,
-															   ParameterHandle theHandle )
+												 ParameterHandle theHandle )
 			throw ( 
 				InteractionParameterNotDefined,
 				InvalidParameterHandle,

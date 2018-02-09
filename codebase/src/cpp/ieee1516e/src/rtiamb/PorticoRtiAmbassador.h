@@ -1581,8 +1581,8 @@ class PorticoRtiAmbassador : public RTIambassadorEx
 		           NotConnected,
 		           RTIinternalError );
 
-		IDatatype* getAttributeDatatype(ObjectClassHandle whichClass,
-			AttributeHandle theHandle)
+		IDatatype* getAttributeDatatype( ObjectClassHandle whichClass,
+										 AttributeHandle theHandle)
 			throw ( AttributeNotDefined,
 					InvalidAttributeHandle,
 					InvalidObjectClassHandle,
@@ -1591,8 +1591,8 @@ class PorticoRtiAmbassador : public RTIambassadorEx
 					RTIinternalError);
 
 
-		IDatatype* getParameterDatatype(InteractionClassHandle whichClass,
-			ParameterHandle theHandle)
+		IDatatype* getParameterDatatype( InteractionClassHandle whichClass,
+										 ParameterHandle theHandle)
 			throw ( InteractionParameterNotDefined,
 				    InvalidParameterHandle,
 				    InvalidInteractionClassHandle,

@@ -7,7 +7,7 @@
 PORTICO1516E_NS_START
 
 	IDatatype* PorticoRtiAmbassador::getAttributeDatatype( ObjectClassHandle whichClass,
-																		 AttributeHandle theHandle)
+														   AttributeHandle theHandle)
 		throw ( InteractionParameterNotDefined,
 				InvalidParameterHandle,
 				InvalidInteractionClassHandle,
@@ -21,15 +21,15 @@ PORTICO1516E_NS_START
 		// Convert handles for call
 		jint classHandle = JniUtils::fromHandle(whichClass);
 		jint attributeHandle = JniUtils::fromHandle(theHandle);
-
+		
 		// Get the class type / name token pair
-		jobjectArray info = (jobjectArray)jnienv->CallObjectMethod(javarti->jproxy,
+		jstring info = (jstring)jnienv->CallObjectMethod(javarti->jproxy,
 														 javarti->GET_ATTRIBUTE_DATATYPE,
 														 classHandle,
 														 attributeHandle);
 	 
 		// Create the string set from the 
-		set<wstring> details =  JniUtils::toWideStringSet(jnienv, info);
+		string className =  JniUtils::toString(jnienv, info);
 		
 		DatatypeRetrieval* databutler = DatatypeRetrieval::get();
 		if (!databutler->isInitialized())
@@ -37,12 +37,12 @@ PORTICO1516E_NS_START
 			databutler->initialize(this->getFom());
 		}
 
-		return databutler->getAttributeDatatype((*details.begin()), (*details.rbegin())) ;
+		return databutler->getAttributeDatatype( className );
 	}
 
 
 	IDatatype* PorticoRtiAmbassador::getParameterDatatype( InteractionClassHandle whichClass,
-																		 ParameterHandle theHandle)
+														   ParameterHandle theHandle)
 		throw ( InteractionParameterNotDefined,
 				InvalidParameterHandle,
 				InvalidInteractionClassHandle,
@@ -50,15 +50,30 @@ PORTICO1516E_NS_START
 				NotConnected,
 				RTIinternalError )
 	{
-        // call to cache. Use handle as key ?
+		JNIEnv* jnienv = this->javarti->getJniEnvironment();
 
-		//this->getParameterName()
-		// Get active environment
-		
+		// Convert handles for call
+		jint classHandle = JniUtils::fromHandle(whichClass);
+		jint parameterHandle = JniUtils::fromHandle(theHandle);
 
+		// Get the class type / name token pair
+		jstring info = (jstring)jnienv->CallObjectMethod(javarti->jproxy,
+			javarti->GET_PARAMETER_DATATYPE,
+			classHandle,
+			parameterHandle);
 
-		return new BasicType("name", 4, Endianness::LITTLE);
+		// Create the string set from the 
+		string className = JniUtils::toString(jnienv, info);
+
+		DatatypeRetrieval* databutler = DatatypeRetrieval::get();
+		if (!databutler->isInitialized())
+		{
+			databutler->initialize(this->getFom());
+		}
+
+		return databutler->getParameterDatatype(className);
 	}
+
 
 	std::wstring PorticoRtiAmbassador::getFom()
 		throw ( NotConnected,
