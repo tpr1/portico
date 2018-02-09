@@ -73,14 +73,7 @@ public:
     * @see IDatatype
     */
     virtual IDatatype* getDatatype();
-
-    /**
-    * Get the IDatatype associated with this array.
-    * @param datatype The IDatatype associated with this ArrayType.
-    * @see IDatatype
-    */
-    virtual void setDatatype(IDatatype *datatype);
-
+ 
     /**
     * Get the Demensions associated with this array object.
     * @param datatype The IDatatype associated with this ArrayType.

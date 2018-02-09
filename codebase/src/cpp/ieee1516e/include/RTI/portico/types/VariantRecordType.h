@@ -63,13 +63,7 @@ public:
     * @return the discriminant datatype 
     */
     virtual IDatatype* getDiscriminateDatatype() const;
-
-    /**
-    * Set the descriminate datatype.
-    *
-    * @param the discriminant datatype
-    */
-    virtual void setDiscriminateDatatype(IDatatype* discriminantDatatype);
+ 
     /**
     * Get the Alternate.
     *

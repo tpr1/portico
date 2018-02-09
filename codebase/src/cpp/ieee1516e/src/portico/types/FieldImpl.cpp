@@ -4,7 +4,8 @@
  
 Field::Field(const std::string& name, IDatatype* datatype)
 {
-    
+    this->name = name;
+	this->datatype = datatype;
 }
 
 Field::~Field()
@@ -20,11 +21,6 @@ std::string Field::getName() const
 IDatatype* Field::getDatatype()
 {
     return this->datatype;
-}
- 
-void Field::setDatatype(IDatatype* datatype)
-{
-    this->datatype = datatype;
 }
 
 bool Field::operator==(const Field& other)

@@ -33,11 +33,6 @@ IDatatype* ArrayType::getDatatype()
     return this->datatype;
 }
 
-void ArrayType::setDatatype(IDatatype *datatype)
-{
-    this->datatype = datatype;
-}
-
 std::list<Dimension>& ArrayType::getDimensions()
 {
     return this->dimensions;

@@ -18,7 +18,7 @@ File: RTI/portico/types/Field.h
 
 
 /**
-* Implementation of the {@link IEnumerator} interface
+*  
 */
 class Field  
 {
@@ -41,7 +41,7 @@ public:
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////// IField Interface //////////////////////////////////
+	///////////////////////////////// Field Interface //////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////
 	/**
 	* Returns the name of this datatype.
@@ -56,15 +56,7 @@ public:
     * @see DatatypeClass.
     */
     virtual IDatatype* getDatatype();
-
-    /**
-    * Set the datatype of this feild.
-    *
-    * @param the Datatype of this field.
-    * @see DatatypeClass.
-    */
-    virtual void setDatatype(IDatatype* datatype);
-
+ 
     /**
     * Check to see if two Field objects are equal.
     *

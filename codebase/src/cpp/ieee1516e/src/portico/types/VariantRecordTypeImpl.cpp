@@ -26,11 +26,6 @@ IDatatype* VariantRecordType::getDiscriminateDatatype() const
     return this->discriminantDatatype;
 }
 
-void VariantRecordType::setDiscriminateDatatype(IDatatype* discriminantDatatype)
-{
-    this->discriminantDatatype = discriminantDatatype;
-}
-
 std::list<Alternative> VariantRecordType::getAlternatives() const
 {
     return this->alternatives;
