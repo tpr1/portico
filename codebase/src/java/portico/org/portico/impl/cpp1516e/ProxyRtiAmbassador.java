@@ -21,17 +21,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
  
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
+import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.MessageRetractionReturn;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.TimeQueryReturn;
 import hla.rti1516e.exceptions.AlreadyConnected;
@@ -2177,16 +2178,16 @@ public class ProxyRtiAmbassador
 		}
 	}
 	
-	public String[] getAttributeDatatype(int classHandle, int attributeHandle)
+	public String getAttributeDatatype(int classHandle, int attributeHandle)
 	{
-		String info[] =  null ;
+		String info =  "" ;
 		
 		ObjectClassHandle newObjectClassHandle = (ObjectClassHandle)new HLA1516eHandle(classHandle);
 		AttributeHandle newAttributeHandle = new HLA1516eHandle(attributeHandle);
 		try
 		{
 			IDatatype type = rtiamb.getAttributeDatatype( newObjectClassHandle, newAttributeHandle );
-			info = new String[] {  type.getName() , type.getDatatypeClass().toString()};
+			info = type.getName() ;
 			 
 		}
 		catch(Exception e)
@@ -2196,19 +2197,29 @@ public class ProxyRtiAmbassador
 		}
 		
 		return info;
+		 
+	}
+ 
+	public String getParameterDatatype(int classHandle, int attributeHandle)
+	{
+		String info = "" ;
 		
-		//return new BasicType("name", 4, Endianness.LITTLE);
-	}
-	
-	public IDatatype getDatatypeByName(String name)
-	{
-		return new BasicType("name", 4, Endianness.LITTLE);
-	}
-	
-	public int getParameterDatatype(int classHandle, int attributeHandle)
-	{
-		//rtiamb.getParameterDatatype( classHandle, attributeHandle );
-		return 444;
+		InteractionClassHandle newInteractionClassHandle = (InteractionClassHandle)new HLA1516eHandle(classHandle);
+		ParameterHandle newAttributeHandle = new HLA1516eHandle(attributeHandle);
+		
+		try
+		{
+			IDatatype type = rtiamb.getParameterDatatype( newInteractionClassHandle, newAttributeHandle );
+			info = type.getName() ;
+			 
+		}
+		catch(Exception e)
+		{
+			ExceptionManager.pushException( this.id, e );
+			return info;
+		}
+		
+		return info;
 	}
 	
 	public String getFom()
