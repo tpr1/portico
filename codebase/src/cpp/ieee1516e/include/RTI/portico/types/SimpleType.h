@@ -26,7 +26,7 @@ class SimpleType : public virtual IDatatype
 protected:
 
 	std::string	name;			/// The name of this datatype
-	BasicType *representation; /// BasicType or DatatypePlaceholder only
+	IDatatype *representation; /// BasicType or DatatypePlaceholder only
 
 public:
 
@@ -36,7 +36,7 @@ public:
 	 * @param name the name of this data type
 	 * @param representation // BasicType or DatatypePlaceholder only
 	 */
-	SimpleType(const std::string& name, BasicType *representation);
+	SimpleType(const std::string& name, IDatatype *representation);
 	virtual ~SimpleType();
     //////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////// SimpleType representation /////////////////////////

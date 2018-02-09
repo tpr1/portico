@@ -3,7 +3,7 @@
 #include "RTI/portico/types/SimpleType.h"
 
 
-SimpleType::SimpleType(const std::string& name, BasicType *representation)
+SimpleType::SimpleType(const std::string& name, IDatatype *representation)
 {
     this->name = name;
     this->representation = representation;
