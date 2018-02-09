@@ -81,7 +81,6 @@
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\ArrayTypeImpl.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\BasicTypeImpl.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\DimensionImpl.cpp" />
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\Endianness.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\EnumeratedTypeImpl.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\EnumeratorImpl.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\FieldImpl.cpp" />

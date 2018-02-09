@@ -380,9 +380,6 @@
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\DimensionImpl.cpp">
       <Filter>Source Files\datatypes</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\Endianness.cpp">
-      <Filter>Source Files\datatypes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\EnumeratedTypeImpl.cpp">
       <Filter>Source Files\datatypes</Filter>
     </ClCompile>
