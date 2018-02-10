@@ -473,9 +473,9 @@ string Runtime::getCompiler() throw( RTIinternalError )
 {
 #ifdef VC14
 	return string( "-Dportico.cpp.compiler=vc14" );
-#elif VC12
+#elif defined(VC12)
 	return string( "-Dportico.cpp.compiler=vc12" );
-#elif VC11
+#elif defined(VC11)
 	return string( "-Dportico.cpp.compiler=vc11" );
 #elif defined(VC10)
 	return string( "-Dportico.cpp.compiler=vc10" );
