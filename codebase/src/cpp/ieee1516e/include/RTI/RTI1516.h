@@ -20,7 +20,7 @@
 #define RTI_1516_h
 
 // Identification of the API version number.
-#define HLA_SPECIFICATION_NAME "1516e"
+#define HLA_SPECIFICATION_NAME "1516"
 #define HLA_API_MAJOR_VERSION 2
 #define HLA_API_MINOR_VERSION 0
 
@@ -57,7 +57,6 @@ namespace rti1516e
 // The files containing the RTI Ambassdor and Federate Ambassador service calls
 #include <RTI/FederateAmbassador.h>
 #include <RTI/RTIambassador.h>
-#include <RTI/portico/RTIambassadorEx.h>
 
 // The file containing the RTI Ambassador Factory.
 #include <RTI/RTIambassadorFactory.h>
