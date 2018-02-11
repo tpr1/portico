@@ -19,9 +19,10 @@
 #include "jni/Runtime.h"
 #include "jni/JavaRTI.h"
 
+
 PORTICO1516E_NS_START
 
-class PorticoRtiAmbassador : public RTIambassador
+class PorticoRtiAmbassador : public RTIambassadorEx 
 {
 	//----------------------------------------------------------
 	//                    STATIC VARIABLES
@@ -33,14 +34,14 @@ class PorticoRtiAmbassador : public RTIambassador
 	//----------------------------------------------------------
 	private:
 		JavaRTI *javarti;
-		Logger *logger;
+		Logger *logger; 
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
 	public:
 		PorticoRtiAmbassador();
-		~PorticoRtiAmbassador();
+		virtual ~PorticoRtiAmbassador();
 
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
@@ -1579,6 +1580,29 @@ class PorticoRtiAmbassador : public RTIambassador
 		           FederateNotExecutionMember,
 		           NotConnected,
 		           RTIinternalError );
+
+		IDatatype* getAttributeDatatype( ObjectClassHandle whichClass,
+										 AttributeHandle theHandle)
+			throw ( AttributeNotDefined,
+					InvalidAttributeHandle,
+					InvalidObjectClassHandle,
+					FederateNotExecutionMember,
+					NotConnected,
+					RTIinternalError);
+
+
+		IDatatype* getParameterDatatype( InteractionClassHandle whichClass,
+										 ParameterHandle theHandle)
+			throw ( InteractionParameterNotDefined,
+				    InvalidParameterHandle,
+				    InvalidInteractionClassHandle,
+				    FederateNotExecutionMember,
+				    NotConnected,
+				    RTIinternalError);
+
+		std::wstring getFom()
+			throw ( NotConnected,
+				    RTIinternalError);
 
 	private:
 
