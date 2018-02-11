@@ -24,7 +24,7 @@ File: RTI/portico/types/Enumerator.h
 #pragma once
 
 #include "RTI/portico/types/Endianness.h"  
-
+#include <string>
 
 /**
 *  Stores the name and value of an enumerator used by the Enumerated type.
