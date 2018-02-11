@@ -24,7 +24,7 @@ File: src/portico/types/DatatypeRetrieval.h
 #pragma once
 
 #include "jni/JavaRTI.h"
-#include "pugixml/pugixml.hpp"
+#include "pugixml.hpp"
 #include <string>
 
 #include "RTI\portico\types\BasicType.h"
