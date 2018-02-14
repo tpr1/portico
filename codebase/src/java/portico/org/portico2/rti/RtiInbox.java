@@ -73,12 +73,19 @@ public class RtiInbox
 			//
 			// Federation Message - Find the federation and forward to it
 			//
-//			int fedId = request.getFederationId();
-//			Federation targetFederation = federationManager.getFederation( fedId );
-//			if( targetFederation != null )
-//				targetFederation.getIncomingSink().process( context );
-//			else
-//				throw new JRTIinternalError( "No known federation with ID "+fedId );
+			try
+			{
+				int federationHandle = request.getTargetFederation();
+				Federation targetFederation = federationManager.getFederation( federationHandle );
+				if( targetFederation != null )
+					targetFederation.getIncomingSink().process( context );
+				else
+					context.error( new JRTIinternalError("No federation with handle: "+federationHandle) );
+			}
+			catch( Exception e )
+			{
+				context.error( e );
+			}
 		}
 		else
 		{

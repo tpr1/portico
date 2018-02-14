@@ -21,6 +21,7 @@ import org.portico.lrc.compat.JConfigurationException;
 import org.portico2.rti.federation.Federation;
 import org.portico2.rti.services.federation.incoming.JoinFederationHandler;
 import org.portico2.rti.services.federation.incoming.ResignFederationHandler;
+import org.portico2.rti.services.sync.incoming.RegisterSyncPointHandler;
 import org.portico2.shared.messaging.IMessageHandler;
 import org.portico2.shared.messaging.MessageType;
 
@@ -68,6 +69,9 @@ public class RTIHandlerRegistry
 		HashMap<MessageType,RTIMessageHandler> incoming = new HashMap<>();
 		incoming.put( MessageType.JoinFederation,    new JoinFederationHandler() );
 		incoming.put( MessageType.ResignFederation,  new ResignFederationHandler() );
+		
+		// Synchronization Points
+		incoming.put( MessageType.RegisterSyncPoint, new RegisterSyncPointHandler() );
 
 		
 		///////////////////////////////////////////////////////////////////////////

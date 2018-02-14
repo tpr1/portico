@@ -129,7 +129,7 @@ import org.portico.lrc.services.pubsub.msg.UnpublishObjectClass;
 import org.portico.lrc.services.pubsub.msg.UnsubscribeInteractionClass;
 import org.portico.lrc.services.pubsub.msg.UnsubscribeObjectClass;
 import org.portico.lrc.services.sync.msg.SyncPointAchieved;
-import org.portico.lrc.services.sync.msg.SyncPointAnnouncement;
+import org.portico.lrc.services.sync.msg.SyncPointRegister;
 import org.portico.lrc.services.time.msg.DisableAsynchronousDelivery;
 import org.portico.lrc.services.time.msg.DisableTimeConstrained;
 import org.portico.lrc.services.time.msg.DisableTimeRegulation;
@@ -746,7 +746,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		SyncPointAnnouncement request = new SyncPointAnnouncement( label, userSuppliedTag );
+		SyncPointRegister request = new SyncPointRegister( label, userSuppliedTag );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -804,7 +804,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		HashSet<Integer> set = null;
 		if( synchronizationSet != null )
 			set = HLA1516eFederateHandleSet.toJavaSet( synchronizationSet );
-		SyncPointAnnouncement request = new SyncPointAnnouncement( label, tag, set );
+		SyncPointRegister request = new SyncPointRegister( label, tag, set );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////

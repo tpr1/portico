@@ -24,6 +24,7 @@ import org.portico2.lrc.services.federation.outgoing.JoinFederationHandler;
 import org.portico2.lrc.services.federation.outgoing.ListFederationsHandler;
 import org.portico2.lrc.services.federation.outgoing.PingHandler;
 import org.portico2.lrc.services.federation.outgoing.ResignFederationHandler;
+import org.portico2.lrc.services.sync.outgoing.RegisterSyncPointHandler;
 import org.portico2.shared.messaging.IMessageHandler;
 import org.portico2.shared.messaging.MessageType;
 
@@ -76,6 +77,9 @@ public class LRCHandlerRegistry
 		outgoing.put( MessageType.DestroyFederation, new DestroyFederationHandler() );
 		outgoing.put( MessageType.ListFederations,   new ListFederationsHandler() );
 		outgoing.put( MessageType.Ping,              new PingHandler() );
+		
+		// Synchronization Point Management
+		outgoing.put( MessageType.RegisterSyncPoint, new RegisterSyncPointHandler() );
 		
 		///////////////////////////////////////////////////////////////////////////
 		///  Incoming Handlers   //////////////////////////////////////////////////

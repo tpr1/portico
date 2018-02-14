@@ -130,7 +130,7 @@ import org.portico.lrc.services.saverestore.msg.SaveBegun;
 import org.portico.lrc.services.saverestore.msg.SaveComplete;
 import org.portico.lrc.services.saverestore.msg.SaveRequest;
 import org.portico.lrc.services.sync.msg.SyncPointAchieved;
-import org.portico.lrc.services.sync.msg.SyncPointAnnouncement;
+import org.portico.lrc.services.sync.msg.SyncPointRegister;
 import org.portico.lrc.services.time.msg.DisableAsynchronousDelivery;
 import org.portico.lrc.services.time.msg.DisableTimeConstrained;
 import org.portico.lrc.services.time.msg.DisableTimeRegulation;
@@ -468,7 +468,7 @@ public class Rti13Ambassador implements RTIambassadorEx
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		SyncPointAnnouncement request = new SyncPointAnnouncement( label, tag );
+		SyncPointRegister request = new SyncPointRegister( label, tag );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -525,7 +525,7 @@ public class Rti13Ambassador implements RTIambassadorEx
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		SyncPointAnnouncement request = new SyncPointAnnouncement(label, tag, convertSet(syncset));
+		SyncPointRegister request = new SyncPointRegister(label, tag, convertSet(syncset));
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////

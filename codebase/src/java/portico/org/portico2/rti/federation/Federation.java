@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.Logger;
@@ -26,6 +27,7 @@ import org.portico.lrc.compat.JFederateNameAlreadyInUse;
 import org.portico.lrc.model.ObjectModel;
 import org.portico.utils.messaging.PorticoMessage;
 import org.portico2.rti.RTI;
+import org.portico2.rti.services.sync.data.SyncPointManager;
 import org.portico2.shared.PorticoConstants;
 import org.portico2.shared.messaging.MessageSink;
 
@@ -46,11 +48,14 @@ public class Federation
 	private String name;
 	private ObjectModel fom;	
 	private int federationHandle;
-	private Map<String,Federate> federates;
+	private Map<Integer,Federate> federates;
 	
 	// Message Processing
 	private Queue<PorticoMessage> controlQueue;
 	private MessageSink incomingSink;
+	
+	// Synchronization Points
+	private SyncPointManager syncManager;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -67,6 +72,9 @@ public class Federation
 		// Message Processing
 		this.controlQueue = new LinkedList<>();
 		this.incomingSink = new MessageSink( name+"-incoming", logger );
+		
+		// Synchronization Points
+		this.syncManager = new SyncPointManager();
 	}
 
 	//----------------------------------------------------------
@@ -82,17 +90,38 @@ public class Federation
 		return this.logger;
 	}
 
+	public ObjectModel getFOM()
+	{
+		return this.fom;
+	}
+
+	public SyncPointManager getSyncPointManager()
+	{
+		return this.syncManager;
+	}
+
+	public MessageSink getIncomingSink()
+	{
+		return this.incomingSink;
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////
+	///  Federate Management   ////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////
 	public void addFederate( Federate federate )
 	{
-		if( federates.containsKey(federate.getFederateName()) )
-			throw new JFederateNameAlreadyInUse( federate.getFederateName() );
-		
-		this.federates.put( federate.getFederateName(), federate );
+		for( Federate temp : federates.values() )
+		{
+			if( temp.getFederateName().equalsIgnoreCase(federate.getFederateName()) )
+				throw new JFederateNameAlreadyInUse( federate.getFederateName() );
+		}
+
+		this.federates.put( federate.getFederateHandle(), federate );
 	}
 	
 	public void removeFederate( Federate federate )
 	{
-		this.federates.remove( federate.getFederateName() );
+		this.federates.remove( federate.getFederateHandle() );
 	}
 	
 	public Federate getFederate( String name )
@@ -108,13 +137,7 @@ public class Federation
 	
 	public Federate getFederate( int federateHandle )
 	{
-		for( Federate federate : federates.values() )
-		{
-			if( federate.getFederateHandle() == federateHandle )
-				return federate;
-		}
-		
-		return null;
+		return federates.get( federateHandle );
 	}
 	
 	public int getFederateHandle( String name )
@@ -129,15 +152,14 @@ public class Federation
 		return value;		
 	}
 	
+	public Set<Integer> getFederateHandles()
+	{
+		return federates.keySet();
+	}
+	
 	public boolean containsFederate( int federateHandle )
 	{
-		for( Federate f : federates.values() )
-		{
-			if( f.getFederateHandle() == federateHandle )
-				return true;
-		}
-		
-		return false;
+		return federates.keySet().contains( federateHandle );
 	}
 	
 	public boolean containsFederate( String name )
@@ -165,11 +187,8 @@ public class Federation
 	{
 		return this.federationHandle;
 	}
-	
-	public MessageSink getIncomingSink()
-	{
-		return this.incomingSink;
-	}
+
+
 
 	//----------------------------------------------------------
 	//                     STATIC METHODS

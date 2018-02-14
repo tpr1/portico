@@ -14,12 +14,22 @@
  */
 package org.portico2.rti.services;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 import org.portico.lrc.compat.JConfigurationException;
 import org.portico.lrc.compat.JException;
+import org.portico.lrc.model.OCInstance;
+import org.portico.lrc.model.OCMetadata;
+import org.portico.lrc.model.ObjectModel;
+import org.portico.lrc.model.Space;
+import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.rti.federation.Federate;
 import org.portico2.rti.federation.Federation;
+import org.portico2.rti.services.sync.data.SyncPointManager;
+import org.portico2.shared.PorticoConstants;
 import org.portico2.shared.messaging.IMessageHandler;
 import org.portico2.shared.messaging.MessageContext;
 
@@ -35,6 +45,8 @@ public abstract class RTIMessageHandler implements IMessageHandler
 	protected Federation federation;
 	protected Logger logger;
 //	private IConnection connection; FIXME - Shouldn't this be an outgoing queue? Yes.
+	
+	protected SyncPointManager syncPoints;
 	
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -67,6 +79,7 @@ public abstract class RTIMessageHandler implements IMessageHandler
 		this.federation = (Federation)properties.get( IMessageHandler.KEY_RTI_FEDERATION );
 		this.logger = federation.getLogger();
 //		this.connection = lrc.getConnection();
+		this.syncPoints = federation.getSyncPointManager();
 	}
 	
 	/**
@@ -92,6 +105,335 @@ public abstract class RTIMessageHandler implements IMessageHandler
 	{
 		return federation.getFederationHandle();
 	}
+
+	protected final ObjectModel fom()
+	{
+		return federation.getFOM();
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///  Handle and Name Methods  ///////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * Convenience method that returns the name of the federate that hsa teh given handle.
+	 * If there is no known federate with the given handle, null is returned.
+	 * 
+	 * @param federateHandle The federate handle to fetch the name for.
+	 * @return The name of the federate with the given handle if it is known, or null if it isn't
+	 */
+	protected String federateName( int federateHandle )
+	{
+		Federate federate = federation.getFederate( federateHandle );
+		if( federate == null )
+		{
+			if( federateHandle == PorticoConstants.RTI_HANDLE )
+				return "RTI";
+			else
+				return null;
+		}
+		else
+		{
+			return federate.getFederateName();
+		}
+	}
+	
+	/**
+	 * THis method returns a string that contains either the name or the handle of the identified
+	 * federate. If logging with names is enabled for federates (see the documentation for
+	 * {@link PorticoConstants#isPrintHandlesForFederates()}), the string will contain the federate
+	 * name, otherwise it will contain the federate handle.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String moniker( int federateHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForFederates() )
+			return ""+federateHandle;
+			//return ""+PorticoConstants.isPrintHandlesForFederates();
+		else
+			return federateName(federateHandle);
+	}
+
+	/**
+	 * Returns the result of calling {@link #moniker(int)} and passing the source federate of the
+	 * provided message.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String moniker( PorticoMessage message )
+	{
+		return moniker( message.getSourceFederate() );
+	}
+
+	/**
+	 * Returns a string that represents the object instance. If logging with names is enabled
+	 * for object instances, the name of the instance will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForObjects()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String objectMoniker( int objectHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForObjects() )
+			return ""+objectHandle;
+		else
+			return "unknown"; // TODO FIXME
+//			return repository.findObjectName( objectHandle );
+	}
+	
+	/**
+	 * Returns result of calling {@link #objectMoniker(int)} passing the handle of given instance.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String objectMoniker( OCInstance instance )
+	{
+		return objectMoniker( instance.getHandle() );
+	}
+	
+	/**
+	 * Returns a string that represents the object class. If logging with names is enabled
+	 * for object classes, the name of the class will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForObjectClass()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String ocMoniker( int objectClassHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForObjectClass() )
+		{
+			return ""+objectClassHandle;
+		}
+		else
+		{
+			String name = fom().getObjectClassName( objectClassHandle );
+			if( name == null )
+				name = objectClassHandle+" <unknown>";
+			return name;
+		}
+	}
+	
+	/**
+	 * Returns a string that represents the object class. If logging with names is enabled
+	 * for object classes, the name of the class will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForObjectClass()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String ocMoniker( OCMetadata objectClass )
+	{
+		return ocMoniker( objectClass.getHandle() );
+	}
+
+	/**
+	 * Returns a string that represents all the attribute handles. If logging with names is
+	 * enabled for attributes, the sting will contain the attribute names rather than the handles
+	 * (see {@link PorticoConstants#isPrintHandlesForAttributeClass()})
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String acMoniker( Set<Integer> attributeHandles )
+	{
+		ArrayList<String> attributes = new ArrayList<String>();
+		if( PorticoConstants.isPrintHandlesForAttributeClass() )
+		{
+			for( int handle : attributeHandles )
+				attributes.add( ""+handle );
+		}
+		else
+		{
+			for( int handle : attributeHandles )
+				attributes.add( fom().findAttributeName(handle) );
+		}
+
+		return attributes.toString();
+	}
+	
+	/**
+	 * Returns a string that represents all the attribute handles. If logging with names is
+	 * enabled for attributes, the sting will contain the attribute names rather than the handles
+	 * (see {@link PorticoConstants#isPrintHandlesForAttributeClass()})
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String acMoniker( int... attributeHandles )
+	{
+		ArrayList<String> attributes = new ArrayList<String>();
+		if( PorticoConstants.isPrintHandlesForAttributeClass() )
+		{
+			for( int handle : attributeHandles )
+				attributes.add( ""+handle );
+		}
+		else
+		{
+			for( int handle : attributeHandles )
+				attributes.add( fom().findAttributeName(handle) );
+		}
+
+		return attributes.toString();
+	}
+
+	/**
+	 * Returns a printable string for the given set of attributes that also includes the
+	 * size of the values provided in brackets after the name. For example [name(14b),other(4b)].
+	 * <p/>
+	 * The names are only substituted for handles if set to do so in the FOM.
+	 * (see {@link PorticoConstants#isPrintHandlesForAttributeClass()})
+	 */
+	protected String acMonikerWithSizes( Map<Integer,byte[]> attributes )
+	{
+		ArrayList<String> printable = new ArrayList<>();
+		final boolean printHandles = PorticoConstants.isPrintHandlesForAttributeClass();
+		for( Integer handle : attributes.keySet() )
+		{
+			int size = attributes.get(handle).length;
+			if( printHandles )
+				printable.add( handle+"("+size+"b)" );
+			else
+				printable.add( fom().findAttributeName(handle)+"("+size+"b)" );
+		}
+		
+		return printable.toString();
+	}
+	
+	/**
+	 * Returns a printable string for the given set of parameters that also includes the
+	 * size of the values provided in brackets after the name. For example [name(14b),other(4b)].
+	 * <p/>
+	 * The names are only substituted for handles if set to do so in the FOM.
+	 * (see {@link PorticoConstants#isPrintHandlesForAttributeClass()})
+	 */
+	protected String pcMonikerWithSizes( Map<Integer,byte[]> parameters )
+	{
+		ArrayList<String> printable = new ArrayList<>();
+		final boolean printHandles = PorticoConstants.isPrintHandlesForParameterClass();
+		for( Integer handle : parameters.keySet() )
+		{
+			int size = parameters.get(handle).length;
+			if( printHandles )
+				printable.add( handle+"("+size+"b)" );
+			else
+				printable.add( fom().findParameterName(handle)+"("+size+"b)" );
+		}
+
+		return printable.toString();
+	}
+	
+	/**
+	 * Returns a string that represents the interaction class. If logging with names is enabled
+	 * for interaction classes, the name of the class will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForInteractionClass()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String icMoniker( int interactionClassHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForInteractionClass() )
+		{
+			return ""+interactionClassHandle;
+		}
+		else
+		{
+			String name = fom().getInteractionClassName( interactionClassHandle );
+			if( name == null )
+				name = interactionClassHandle+" <unknown>";
+			return name;
+		}
+	}
+
+	/**
+	 * Returns a string that represents all the parameters. If logging with names is enabled
+	 * for parameter classes, the names of the parameters will be in the returned string, if not,
+	 * the handles will be in the returned string. See
+	 * {@link PorticoConstants#isPrintHandlesForParameterClass()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String pcMoniker( Set<Integer> parameterHandles )
+	{
+		ArrayList<String> attributes = new ArrayList<String>();
+		if( PorticoConstants.isPrintHandlesForParameterClass() )
+		{
+			for( int handle : parameterHandles )
+				attributes.add( ""+handle );
+		}
+		else
+		{
+			for( int handle : parameterHandles )
+				attributes.add( fom().findParameterName(handle) );
+		}
+
+		return attributes.toString();
+	}
+
+	/**
+	 * Returns a string that represents the space. If logging with names is enabled
+	 * for spaces, the name of the space will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForObjectClass()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String spaceMoniker( int spaceHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForSpaces() )
+		{
+			return ""+spaceHandle;
+		}
+		else
+		{
+			Space space = fom().getSpace( spaceHandle );
+			if( space == null )
+				return spaceHandle+" <unknown>";
+			else
+				return space.getName();
+		}
+	}
+	
+	/**
+	 * Returns a string that represents the dimension. If logging with names is enabled
+	 * for dimensions, the name of the dimsneion will be returned, if not, the handle will
+	 * be in the returned string. See {@link PorticoConstants#isPrintHandlesForDimensions()}.
+	 * <p/>
+	 * <b>NOTE:</b> These methods are used to provide some consistency with the way various entities
+	 *              are logged. Using the xxmoniker() methods allows the user to define whether to
+	 *              use handle or names as a configuration option. 
+	 */
+	protected String dimensionMoniker( int dimensionHandle )
+	{
+		if( PorticoConstants.isPrintHandlesForDimensions() )
+			return ""+dimensionHandle;
+		
+		for( Space space : fom().getAllSpaces() )
+		{
+			if( space.hasDimension(dimensionHandle) )
+				return space.getDimension(dimensionHandle).getName();
+		}
+		
+		return dimensionHandle+" <unknown>";
+	}
+
 
 	//----------------------------------------------------------
 	//                     STATIC METHODS

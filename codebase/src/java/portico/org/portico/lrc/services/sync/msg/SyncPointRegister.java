@@ -22,10 +22,11 @@ import org.portico.utils.messaging.PorticoMessage;
 import org.portico2.shared.messaging.MessageType;
 
 /**
- * This message represents the actual announcement of a synchronization point and should trigger a
- * federate ambassador callback for all the relevant federates.
+ * This message represents the request to register a sync point with the given label and federate
+ * set. If accepted by the RTI, the RTI will then generate {@link SyncPointAnnounce} messages that
+ * are sent to each federate for callback processing.
  */
-public class SyncPointAnnouncement extends PorticoMessage
+public class SyncPointRegister extends PorticoMessage
 {
 	//----------------------------------------------------------
 	//                    STATIC VARIABLES
@@ -42,7 +43,7 @@ public class SyncPointAnnouncement extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	public SyncPointAnnouncement( String label, byte[] tag )
+	public SyncPointRegister( String label, byte[] tag )
 	{
 		this.label = label;
 		this.tag = tag;
@@ -51,7 +52,7 @@ public class SyncPointAnnouncement extends PorticoMessage
 	/**
 	 * This will make a copy of the given set of federates, it won't store the original set.
 	 */
-	public SyncPointAnnouncement( String label, byte[] tag, Set<Integer> federates )
+	public SyncPointRegister( String label, byte[] tag, Set<Integer> federates )
 	{
 		this( label, tag );
 		if( federates != null )
@@ -59,9 +60,9 @@ public class SyncPointAnnouncement extends PorticoMessage
 	}
 	
 	/**
-	 * Initialize the announcement from an existing sync point
+	 * Initialize the registration request from an existing sync point
 	 */
-	public SyncPointAnnouncement( SyncPoint point )
+	public SyncPointRegister( SyncPoint point )
 	{
 		this( point.getLabel(), point.getTag(), point.getFederates() );
 	}
@@ -72,7 +73,7 @@ public class SyncPointAnnouncement extends PorticoMessage
 	@Override
 	public MessageType getType()
 	{
-		return MessageType.AnnounceSyncPoint;
+		return MessageType.RegisterSyncPoint;
 	}
 
 	public void setLabel( String label )

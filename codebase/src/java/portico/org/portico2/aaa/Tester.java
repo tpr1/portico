@@ -14,19 +14,8 @@
  */
 package org.portico2.aaa;
 
-import java.io.File;
-import java.net.URL;
-
-import org.portico.impl.HLAVersion;
-import org.portico.lrc.services.federation.msg.Ping;
-import org.portico2.lrc.LRC;
 import org.portico2.rti.RTI;
 import org.portico2.shared.configuration.RID;
-import org.portico2.shared.messaging.MessageContext;
-
-import hla.rti1516e.RTIambassador;
-import hla.rti1516e.RtiFactoryFactory;
-import hla.rti1516e.exceptions.RTIinternalError;
 
 public class Tester
 {
@@ -74,6 +63,15 @@ public class Tester
 		// Connect, Create the federation and join it
 		this.federateOne.createAndJoin( "federateOne", "testFederation" );
 		this.federateTwo.createAndJoin( "federateTwo", "testFederation" );
+		
+		// Initial Sync
+		this.federateOne.registerSyncPoint( "START" );
+		this.federateOne.registerSyncPoint( "START" ); // will fail
+		this.federateTwo.waitForAnnounce( "START" );
+		this.federateTwo.achieve( "START" );
+		this.federateOne.achieve( "START" );
+		this.federateOne.waitForSynchronized( "START" );
+		this.federateTwo.waitForSynchronized( "START" );
 		
 		// Tear things down
 		this.federateOne.resignAndDestroy();

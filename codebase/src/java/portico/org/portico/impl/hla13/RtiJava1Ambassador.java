@@ -128,7 +128,7 @@ import org.portico.lrc.services.saverestore.msg.SaveBegun;
 import org.portico.lrc.services.saverestore.msg.SaveComplete;
 import org.portico.lrc.services.saverestore.msg.SaveRequest;
 import org.portico.lrc.services.sync.msg.SyncPointAchieved;
-import org.portico.lrc.services.sync.msg.SyncPointAnnouncement;
+import org.portico.lrc.services.sync.msg.SyncPointRegister;
 import org.portico.lrc.services.time.msg.DisableAsynchronousDelivery;
 import org.portico.lrc.services.time.msg.DisableTimeConstrained;
 import org.portico.lrc.services.time.msg.DisableTimeRegulation;
@@ -459,11 +459,11 @@ public class RtiJava1Ambassador
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		SyncPointAnnouncement request = null;
+		SyncPointRegister request = null;
 		if( tag == null )
-			request = new SyncPointAnnouncement( label, new byte[0] );
+			request = new SyncPointRegister( label, new byte[0] );
 		else
-			request = new SyncPointAnnouncement( label, tag.getBytes() );
+			request = new SyncPointRegister( label, tag.getBytes() );
 
 		ResponseMessage response = processMessage( request );
 
@@ -520,11 +520,11 @@ public class RtiJava1Ambassador
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		SyncPointAnnouncement request = null;
+		SyncPointRegister request = null;
 		if( tag == null )
-			request = new SyncPointAnnouncement( label, new byte[0], convertSet(syncset) );
+			request = new SyncPointRegister( label, new byte[0], convertSet(syncset) );
 		else
-			request = new SyncPointAnnouncement( label, tag.getBytes(), convertSet(syncset) );
+			request = new SyncPointRegister( label, tag.getBytes(), convertSet(syncset) );
 
 		ResponseMessage response = processMessage( request );
 

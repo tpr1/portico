@@ -22,7 +22,7 @@ import org.portico.lrc.model.OCMetadata;
 import org.portico.lrc.services.federation.msg.RoleCall;
 import org.portico.lrc.services.object.msg.DiscoverObject;
 import org.portico.lrc.services.sync.msg.SyncPointAchieved;
-import org.portico.lrc.services.sync.msg.SyncPointAnnouncement;
+import org.portico.lrc.services.sync.msg.SyncPointRegister;
 import org.portico.utils.messaging.MessageContext;
 import org.portico.utils.messaging.MessageHandler;
 
@@ -133,8 +133,8 @@ public class RoleCallHandler extends LRCMessageHandler
 			// if we don't know about the point, queue an announcement
 			if( syncManager.containsPoint(label) == false )
 			{
-				SyncPointAnnouncement announce =
-					new SyncPointAnnouncement( label, notice.getSyncPointTags().get(label) );
+				SyncPointRegister announce =
+					new SyncPointRegister( label, notice.getSyncPointTags().get(label) );
 				lrcState.getQueue().offer( announce );
 			}
 			

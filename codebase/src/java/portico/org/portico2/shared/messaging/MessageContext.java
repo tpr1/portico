@@ -253,6 +253,23 @@ public class MessageContext implements Externalizable
 	{
 		this.response = new ResponseMessage();
 	}
+
+	/**
+	 * Puts a {@link ExtendedSuccessResponse} into the context and adds the given key/value to it.
+	 * If there is already such a response, it just adds the key/value to that. In this way you
+	 * can build up the map of values one call at a time.
+	 * 
+	 * @param key The key to identify the specific part of the response
+	 * @param value The value to return
+	 */
+	public final void success( String key, Object value )
+	{
+		ExtendedSuccessResponse response = null;
+		if( (this.response instanceof ExtendedSuccessResponse) == false )
+			response = new ExtendedSuccessResponse();
+		
+		response.setResult( key, value );
+	}
 	
 	/**
 	 * Puts a {@link ExtendedSuccessResponse} into the context, including the given return values.

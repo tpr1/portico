@@ -16,12 +16,16 @@ package org.portico2.aaa;
 
 import java.io.File;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 import hla.rti1516e.CallbackModel;
+import hla.rti1516e.FederateHandleSet;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.RtiFactoryFactory;
+import hla.rti1516e.SynchronizationPointFailureReason;
 import hla.rti1516e.exceptions.FederatesCurrentlyJoined;
 import hla.rti1516e.exceptions.FederationExecutionAlreadyExists;
 
@@ -37,6 +41,9 @@ public class Federate
 	private RTIambassador rtiamb;
 	private String federation;
 	private String federate;
+	
+	private Set<String> announcedSet;
+	private Set<String> synchronizedSet;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -46,6 +53,9 @@ public class Federate
 		this.rtiamb = null;
 		this.federation = "unknown";
 		this.federate = "unknown";
+		
+		this.announcedSet = new HashSet<>();
+		this.synchronizedSet = new HashSet<>();
 	}
 
 	//----------------------------------------------------------
@@ -85,9 +95,26 @@ public class Federate
 		this.rtiamb.joinFederationExecution( federate, federation );
 	}
 	
-	public void synchronize( String point ) throws Exception
+	public void registerSyncPoint( String point ) throws Exception
 	{
-		
+		this.rtiamb.registerFederationSynchronizationPoint( point, new byte[]{} );
+	}
+	
+	public void waitForAnnounce( String point ) throws Exception
+	{
+		while( this.announcedSet.contains(point) == false )
+			rtiamb.evokeMultipleCallbacks( 0.1, 1.0 );
+	}
+	
+	public void achieve( String point ) throws Exception
+	{
+		this.rtiamb.synchronizationPointAchieved( point );
+	}
+	
+	public void waitForSynchronized( String point ) throws Exception
+	{
+		while( this.synchronizedSet.contains(point) == false )
+			rtiamb.evokeMultipleCallbacks( 0.1, 1.0 );
 	}
 	
 	public void publishAndSubscribe() throws Exception
@@ -142,7 +169,30 @@ public class Federate
 	////////////////////////////////////////////////////////////////////////////////////
 	private class FedAmb extends NullFederateAmbassador
 	{
-		
+		@Override
+		public void synchronizationPointRegistrationSucceeded( String label )
+		{
+		}
+
+		@Override
+		public void synchronizationPointRegistrationFailed( String label,
+		                                                    SynchronizationPointFailureReason reason )
+		{
+		}
+
+		@Override
+		public void announceSynchronizationPoint( String label, byte[] tag )
+		{
+			System.out.println( "{"+federate+"} Sync point announced: "+label );
+			announcedSet.add( label );
+		}
+
+		@Override
+		public void federationSynchronized( String label, FederateHandleSet failedToSyncSet )
+		{
+			System.out.println( "{"+federate+"} Federation synchronized: "+label );
+			synchronizedSet.add( label );
+		}
 	}
 
 

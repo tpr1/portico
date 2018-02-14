@@ -22,7 +22,7 @@ import org.portico.lrc.LRCMessageHandler;
 import org.portico.lrc.compat.JRTIinternalError;
 import org.portico.lrc.services.sync.data.SyncPoint;
 import org.portico.lrc.services.sync.msg.RegisterSyncPointResult;
-import org.portico.lrc.services.sync.msg.SyncPointAnnouncement;
+import org.portico.lrc.services.sync.msg.SyncPointRegister;
 import org.portico.lrc.services.sync.msg.SyncRegistrationRequest;
 import org.portico.utils.messaging.MessageContext;
 import org.portico.utils.messaging.MessageHandler;
@@ -30,7 +30,7 @@ import org.portico.utils.messaging.MessageHandler;
 @MessageHandler(modules="lrc-base",
                 keywords={"lrc13","lrcjava1","lrc1516","lrc1516e"},
                 sinks="outgoing",
-                messages=SyncPointAnnouncement.class)
+                messages=SyncPointRegister.class)
 public class RegisterSyncPointHandler extends LRCMessageHandler
 {
 	//----------------------------------------------------------
@@ -60,7 +60,7 @@ public class RegisterSyncPointHandler extends LRCMessageHandler
 		lrcState.checkSave();
 		lrcState.checkRestore();
 		
-		SyncPointAnnouncement announcement = context.getRequest( SyncPointAnnouncement.class, this );
+		SyncPointRegister announcement = context.getRequest( SyncPointRegister.class, this );
 		String label = announcement.getLabel();
 		HashSet<Integer> syncset = announcement.getFederateSet();
 		

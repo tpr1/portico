@@ -31,11 +31,11 @@ public enum MessageType
 	Ping                    ( (short)6, null ),
 	
 	// Synchronization Points
-	RegisterSyncPoint       ( (short)110, null ),
-	RegisterSyncPointResult ( (short)111, null ),
-	AnnounceSyncPoint       ( (short)112, null ),
-	AchieveSyncPoint        ( (short)113, null ),
-	FederationSynchronized  ( (short)114, null ),  // requires implementation
+	RegisterSyncPoint       ( (short)110, null ),  // Register
+	RegisterSyncPointResult ( (short)111, null ),  // Deprecated
+	AnnounceSyncPoint       ( (short)112, null ),  // Callback
+	AchieveSyncPoint        ( (short)113, null ),  // Send
+	FederationSynchronized  ( (short)114, null ),  // Callback
 	
 	// Save Restore
 	SaveRequest             ( (short)120, null ),  // Start things off
