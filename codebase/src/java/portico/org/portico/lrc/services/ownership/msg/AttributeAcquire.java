@@ -17,6 +17,7 @@ package org.portico.lrc.services.ownership.msg;
 import java.util.Set;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Message representing an attribute aquisition request. The request represents two particular
@@ -71,6 +72,12 @@ public class AttributeAcquire extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.AttributeAcquire;
+	}
+
 	/**
 	 * If the ifAvailable flag is set, then immediate processing is required
 	 */

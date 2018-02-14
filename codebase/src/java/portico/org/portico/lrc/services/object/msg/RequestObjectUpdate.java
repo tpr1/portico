@@ -17,6 +17,7 @@ package org.portico.lrc.services.object.msg;
 import java.util.HashSet;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Request the update of the attributes for a given object instance by the federates that own them.
@@ -38,6 +39,11 @@ public class RequestObjectUpdate extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.RequestObjectUpdate;
+	}
 
 	public RequestObjectUpdate()
 	{

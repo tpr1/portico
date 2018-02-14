@@ -23,6 +23,7 @@ import java.util.HashMap;
 import org.portico.lrc.PorticoConstants;
 import org.portico.lrc.model.RegionInstance;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message represents a request to update the values of a group of attributes contained in a
@@ -88,6 +89,11 @@ public class UpdateAttributes extends PorticoMessage implements Externalizable, 
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.UpdateAttributes;
+	}
 
 	public HashMap<Integer,byte[]> getAttributes()
 	{

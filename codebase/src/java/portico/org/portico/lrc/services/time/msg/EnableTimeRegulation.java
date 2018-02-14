@@ -15,6 +15,7 @@
 package org.portico.lrc.services.time.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class EnableTimeRegulation extends PorticoMessage
 {
@@ -42,6 +43,11 @@ public class EnableTimeRegulation extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.EnableTimeRegulation;
+	}
 
 	public double getFederateTime()
     {

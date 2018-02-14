@@ -20,6 +20,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message is a notification to the RTI that the object of the contained handle should be
@@ -66,7 +67,12 @@ public class DeleteObject extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
-
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.DeleteObject;
+	}
+	
 	public int getObjectHandle()
 	{
 		return this.objectHandle;

@@ -19,6 +19,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class NextEventRequest extends PorticoMessage
 {
@@ -51,6 +52,11 @@ public class NextEventRequest extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.NextEventRequest;
+	}
 
 	public double getTime()
 	{

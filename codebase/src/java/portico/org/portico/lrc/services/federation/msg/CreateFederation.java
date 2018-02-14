@@ -18,8 +18,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.portico.impl.HLAVersion;
 import org.portico.lrc.model.ObjectModel;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Contains information relating to a request to create a new federation. The component creating
@@ -39,6 +41,7 @@ public class CreateFederation extends PorticoMessage
 	private String federationName;
 	private transient List<URL> fomModules;
 	private ObjectModel objectModel;
+	private HLAVersion hlaVersion;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -81,6 +84,12 @@ public class CreateFederation extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.CreateFederation;
+	}
+	
 	public String getFederationName()
 	{
 		return federationName;
@@ -105,6 +114,17 @@ public class CreateFederation extends PorticoMessage
 	{
 		return this.fomModules;
 	}
+	
+	public void setHlaVersion( HLAVersion version )
+	{
+		this.hlaVersion = version;
+	}
+	
+	public HLAVersion getHlaVersion()
+	{
+		return this.hlaVersion;
+	}
+
 
 	//----------------------------------------------------------
 	//                     STATIC METHODS

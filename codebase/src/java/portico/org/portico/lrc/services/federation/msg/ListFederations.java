@@ -16,6 +16,7 @@ package org.portico.lrc.services.federation.msg;
 
 import org.portico.bindings.IConnection;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message is used to solicit the currently registered federations available. It is generally
@@ -51,6 +52,11 @@ public class ListFederations extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.ListFederations;
+	}
 
 	public void setFederations( String[] federations )
 	{

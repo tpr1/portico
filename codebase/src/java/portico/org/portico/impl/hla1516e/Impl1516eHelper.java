@@ -16,7 +16,9 @@ package org.portico.impl.hla1516e;
 
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.AlreadyConnected;
 import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
+import hla.rti1516e.exceptions.FederateIsExecutionMember;
 import hla.rti1516e.exceptions.FederateNotExecutionMember;
 import hla.rti1516e.exceptions.InTimeAdvancingState;
 import hla.rti1516e.exceptions.InvalidLogicalTime;
@@ -32,8 +34,6 @@ import org.apache.logging.log4j.Logger;
 
 import org.portico.impl.HLAVersion;
 import org.portico.impl.ISpecHelper;
-import org.portico.lrc.LRC;
-import org.portico.lrc.LRCState;
 import org.portico.lrc.compat.JConcurrentAccessAttempted;
 import org.portico.lrc.compat.JConfigurationException;
 import org.portico.lrc.compat.JEnableTimeConstrainedPending;
@@ -42,11 +42,11 @@ import org.portico.lrc.compat.JFederateNotExecutionMember;
 import org.portico.lrc.compat.JInvalidFederationTime;
 import org.portico.lrc.compat.JRestoreInProgress;
 import org.portico.lrc.compat.JSaveInProgress;
-import org.portico.lrc.compat.JSynchronizationLabelNotAnnounced;
 import org.portico.lrc.compat.JTimeAdvanceAlreadyInProgress;
 import org.portico.lrc.model.ObjectModel;
-import org.portico.utils.messaging.MessageContext;
-
+import org.portico2.lrc.LRC;
+import org.portico2.lrc.LRCState;
+import org.portico2.shared.messaging.MessageContext;
 /**
  * This class helps provides helper methods to the {@link Rti1516eAmbassador} class and helps
  * bridge the gap between the Portico compatibility layer and the HLA 1516e interface. The basic
@@ -67,11 +67,12 @@ public class Impl1516eHelper implements ISpecHelper
 	//----------------------------------------------------------
 	//                   INSTANCE VARIABLES
 	//----------------------------------------------------------
-	private LRC lrc;
-	private LRCState state;
-	private CallbackModel callbackModel;
+	private LRC lrc;                         // TODO done
+	private LRCState state;                  // TODO doing
+	private CallbackModel callbackModel;     // TODO doing
 	
-	private FederateAmbassador fedamb;
+	private FederateAmbassador federateAmbassador;
+
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
@@ -97,14 +98,50 @@ public class Impl1516eHelper implements ISpecHelper
 	////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// Lifecyle Methods /////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
-	public void connected( FederateAmbassador fedamb )
+	public void connect( FederateAmbassador federateAmbassador, CallbackModel callbackModel )
+		throws AlreadyConnected, RTIinternalError
 	{
-		setFederateAmbassador( fedamb );
-	}
+		// check to make sure we're not already connected
+		if( lrc.isConnected() )
+			throw new AlreadyConnected("");
+		
+		// connect the LRC
+		lrc.connect();
 
-	public void disconnected()
+		// set the callback model on the LRC approrpriately
+		this.callbackModel = callbackModel;
+		if( callbackModel == CallbackModel.HLA_EVOKED )
+			lrc.disableImmediateCallbackProcessing();
+		else if( callbackModel == CallbackModel.HLA_IMMEDIATE )
+			lrc.enableImmediateCallbackProcessing();
+	
+		// store the FederateAmbassador for now, we'll stick it on the join call shortly
+		this.federateAmbassador = federateAmbassador;
+	}
+	
+	public void disconnect() throws FederateIsExecutionMember, RTIinternalError
 	{
-		setFederateAmbassador( null );
+		// make sure we're not currently involved in a federation
+		if( state.isJoined() )
+		{
+			throw new FederateIsExecutionMember( "Can't disconnect. Joined to federation ["+
+			                                     state.getFederationName()+"]" );
+		}
+		
+		// Tell the LRC to disconnect
+		try
+		{
+			lrc.disconnect();
+		}
+		finally
+		{
+    		// remove our federate ambassador reference to signal we're "disconnected" :P
+    		this.federateAmbassador = null;
+    		
+    		// turn off the immediate callback handler if we have to
+    		if( callbackModel == CallbackModel.HLA_IMMEDIATE )
+    			lrc.disableImmediateCallbackProcessing();
+		}
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -116,16 +153,6 @@ public class Impl1516eHelper implements ISpecHelper
 		return HLAVersion.IEEE1516e;
 	}
 	
-	public CallbackModel getCallbackModel()
-	{
-		return this.callbackModel;
-	}
-
-	public void setCallbackModel( CallbackModel callbackModel )
-	{
-		this.callbackModel = callbackModel;
-	}
-
 	public void processMessage( MessageContext context ) throws Exception
 	{
 		this.lrc.getOutgoingSink().process( context );
@@ -157,18 +184,19 @@ public class Impl1516eHelper implements ISpecHelper
 	public boolean evokeSingle( double timeout ) throws CallNotAllowedFromWithinCallback,
 	                                                    RTIinternalError
 	{
-		try
-		{
-			return this.lrc.tickSingle( timeout );
-		}
-		catch( JConcurrentAccessAttempted concurrent )
-		{
-			throw new CallNotAllowedFromWithinCallback( concurrent.getMessage(), concurrent );
-		}
-		catch( Exception e )
-		{
-			throw new RTIinternalError( e.getMessage(), e );
-		}
+//		try
+//		{
+//			return this.lrc.tickSingle( timeout );
+//		}
+//		catch( JConcurrentAccessAttempted concurrent )
+//		{
+//			throw new CallNotAllowedFromWithinCallback( concurrent.getMessage(), concurrent );
+//		}
+//		catch( Exception e )
+//		{
+//			throw new RTIinternalError( e.getMessage(), e );
+//		}
+		return false;
 	}
 
 	/**
@@ -184,18 +212,19 @@ public class Impl1516eHelper implements ISpecHelper
 	public boolean evokeMultiple( double min, double max ) throws CallNotAllowedFromWithinCallback,
 	                                                              RTIinternalError
 	{
-		try
-		{
-			return this.lrc.tick( min, max );
-		}
-		catch( JConcurrentAccessAttempted concurrent )
-		{
-			throw new CallNotAllowedFromWithinCallback( concurrent.getMessage(), concurrent );
-		}
-		catch( Exception e )
-		{
-			throw new RTIinternalError( e.getMessage(), e );
-		}
+//		try
+//		{
+//			return this.lrc.tick( min, max );
+//		}
+//		catch( JConcurrentAccessAttempted concurrent )
+//		{
+//			throw new CallNotAllowedFromWithinCallback( concurrent.getMessage(), concurrent );
+//		}
+//		catch( Exception e )
+//		{
+//			throw new RTIinternalError( e.getMessage(), e );
+//		}
+		return false;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -207,7 +236,7 @@ public class Impl1516eHelper implements ISpecHelper
 	 */
 	public void checkConnected() throws NotConnected
 	{
-		if( this.fedamb == null )
+		if( this.federateAmbassador == null )
 			throw new NotConnected( "Federate has not yet called connect()" );
 	}
 
@@ -334,14 +363,14 @@ public class Impl1516eHelper implements ISpecHelper
 	 */
 	public void checkSyncAnnounced( String label ) throws SynchronizationPointLabelNotAnnounced
 	{
-		try
-		{
-			state.checkSyncAnnounced( label );
-		}
-		catch( JSynchronizationLabelNotAnnounced na )
-		{
-			throw new SynchronizationPointLabelNotAnnounced( na.getMessage() );
-		}
+//		try
+//		{
+//			state.checkSyncAnnounced( label );
+//		}
+//		catch( JSynchronizationLabelNotAnnounced na )
+//		{
+//			throw new SynchronizationPointLabelNotAnnounced( na.getMessage() );
+//		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -349,22 +378,17 @@ public class Impl1516eHelper implements ISpecHelper
 	////////////////////////////////////////////////////////////////////////////
 	public FederateAmbassador getFederateAmbassador()
 	{
-		return this.fedamb;
+		return this.federateAmbassador;
 	}
 	
-	public void setFederateAmbassador( FederateAmbassador fedamb )
-	{
-		this.fedamb = fedamb;
-	}
-
 	public Logger getLrcLogger()
 	{
-		return this.lrc.getLrcLogger();
+		return this.lrc.getLogger();
 	}
 	
 	protected void reinitializeLrc()
 	{
-		this.lrc.reinitialize();
+		//this.lrc.reinitialize();
 	}
 
 	//----------------------------------------------------------

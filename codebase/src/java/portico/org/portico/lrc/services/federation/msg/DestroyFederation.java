@@ -15,6 +15,7 @@
 package org.portico.lrc.services.federation.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class DestroyFederation extends PorticoMessage
 {
@@ -41,6 +42,11 @@ public class DestroyFederation extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.DestroyFederation;
+	}
 
 	public String getFederationName()
 	{

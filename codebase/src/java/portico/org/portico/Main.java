@@ -74,5 +74,22 @@ public class Main
 			org.portico.bindings.jgroups.wan.global.Main.main( args );
 			return;
 		}
+		
+		if( args[0].equalsIgnoreCase("rti") )
+		{
+			////////////////////////////////
+			// Application: RTI Server  ////
+			////////////////////////////////
+			org.portico2.rti.Main.main( trimArgs(args,1) );
+		}
+	}
+	
+	private static String[] trimArgs( String[] array, int reduceBy )
+	{
+		String[] newArray = new String[array.length-reduceBy];
+		for( int i = reduceBy; i < array.length; i++ )
+			newArray[i-reduceBy] = array[i];
+		
+		return newArray;
 	}
 }

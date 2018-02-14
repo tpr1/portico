@@ -26,6 +26,7 @@ import org.portico.lrc.model.OCInstance;
 import org.portico.lrc.model.ObjectModel;
 import org.portico.lrc.services.time.data.TimeStatus;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * For proper distribution, each federate needs to know about each other federate that exists in a
@@ -88,6 +89,11 @@ public class RoleCall extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		throw new RuntimeException( "ROLE CALL IS NO LONGER SUPPORTED" );
+	}
 
 	public String getFederateName()
 	{

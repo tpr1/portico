@@ -20,6 +20,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Message that provides the result of an object name reservation request. Intended for callback.
@@ -49,7 +50,12 @@ public class ReserveObjectNameResult extends PorticoMessage implements Externali
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
-	
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.ReserveObjectNameResult;
+	}
+
 	public String getObjectName()
 	{
 		return this.objectName;

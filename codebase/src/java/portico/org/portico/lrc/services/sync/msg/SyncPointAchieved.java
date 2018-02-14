@@ -15,6 +15,7 @@
 package org.portico.lrc.services.sync.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Signal that a federate has achieved a synchronization point.
@@ -44,6 +45,11 @@ public class SyncPointAchieved extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.AchieveSyncPoint;
+	}
 
 	public String getLabel()
 	{

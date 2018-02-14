@@ -15,6 +15,7 @@
 package org.portico.lrc.services.pubsub.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class UnpublishInteractionClass extends PorticoMessage
 {
@@ -40,6 +41,11 @@ public class UnpublishInteractionClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.UnpublishInteraction;
+	}
 
 	public int getClassHandle()
 	{

@@ -25,6 +25,7 @@ import org.portico.lrc.model.ACInstance;
 import org.portico.lrc.model.OCInstance;
 import org.portico.lrc.model.RegionInstance;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class DiscoverObject extends PorticoMessage implements Externalizable
 {
@@ -88,7 +89,12 @@ public class DiscoverObject extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
-
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.DiscoverObject;
+	}
+	
 	public int getClassHandle()
     {
     	return classHandle;

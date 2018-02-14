@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.portico.lrc.model.ObjectModel;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class JoinFederation extends PorticoMessage
 {
@@ -70,6 +71,11 @@ public class JoinFederation extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.JoinFederation;
+	}
 
 	public String getFederateName()
 	{

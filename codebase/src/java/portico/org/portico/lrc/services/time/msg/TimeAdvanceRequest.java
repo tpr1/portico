@@ -20,6 +20,7 @@ import java.io.ObjectOutput;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class TimeAdvanceRequest extends PorticoMessage
 {
@@ -56,6 +57,11 @@ public class TimeAdvanceRequest extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.TimeAdvanceRequest;
+	}
 
 	public double getTime()
 	{

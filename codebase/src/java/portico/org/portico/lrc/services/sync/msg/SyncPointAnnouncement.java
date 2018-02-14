@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.portico.lrc.services.sync.data.SyncPoint;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message represents the actual announcement of a synchronization point and should trigger a
@@ -68,6 +69,12 @@ public class SyncPointAnnouncement extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.AnnounceSyncPoint;
+	}
+
 	public void setLabel( String label )
 	{
 		this.label = label;

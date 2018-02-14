@@ -15,6 +15,7 @@
 package org.portico.lrc.services.object.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class LocalDelete extends PorticoMessage
 {
@@ -40,6 +41,11 @@ public class LocalDelete extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.LocalDeleteObject;
+	}
 
 	public int getObjectHandle()
 	{

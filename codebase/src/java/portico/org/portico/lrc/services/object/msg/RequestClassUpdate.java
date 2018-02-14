@@ -17,6 +17,7 @@ package org.portico.lrc.services.object.msg;
 import java.util.Set;
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Request the update of all instances for a given class (or its subclasses) by the federates that
@@ -40,6 +41,11 @@ public class RequestClassUpdate extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.RequestClassUpdate;
+	}
 
 	public RequestClassUpdate()
 	{

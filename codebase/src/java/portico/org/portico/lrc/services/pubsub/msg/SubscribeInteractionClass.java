@@ -16,6 +16,7 @@ package org.portico.lrc.services.pubsub.msg;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class SubscribeInteractionClass extends PorticoMessage
 {
@@ -57,6 +58,11 @@ public class SubscribeInteractionClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.SubscribeInteraction;
+	}
 
 	public int getClassHandle()
 	{

@@ -22,6 +22,7 @@ import hla.rti.*;
 import hla.rti.jlc.RTIambassadorEx;
 
 import org.apache.logging.log4j.Logger;
+import org.portico.impl.HLAVersion;
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
 import org.portico.impl.hla13.types.HLA13AttributeHandleSet;
@@ -191,6 +192,7 @@ public class Rti13Ambassador implements RTIambassadorEx
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( executionName, fed );
+		request.setHlaVersion( HLAVersion.HLA13 );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////

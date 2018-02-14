@@ -21,9 +21,10 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.portico.lrc.PorticoConstants;
 import org.portico.lrc.compat.JRTIinternalError;
 import org.portico.lrc.utils.MessageHelpers;
+import org.portico2.shared.PorticoConstants;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This is the parent class of all Portico request messages. All messages sent through the Portico
@@ -53,7 +54,7 @@ import org.portico.lrc.utils.MessageHelpers;
  * implements private writeObject and readObject methods for faster serialization where a child
  * class is not Externalizable.
  */
-public class PorticoMessage implements Serializable, Cloneable
+public abstract class PorticoMessage implements Serializable, Cloneable
 {
 	//----------------------------------------------------------
 	//                    STATIC VARIABLES
@@ -65,6 +66,7 @@ public class PorticoMessage implements Serializable, Cloneable
 	//----------------------------------------------------------
 	protected int sourceFederate;
 	protected int targetFederate;
+	protected int targetFederation;
 	protected double timestamp;
 	protected boolean immediate; // does this message require immediate processing?
 
@@ -77,6 +79,7 @@ public class PorticoMessage implements Serializable, Cloneable
 		super();
 		this.sourceFederate = PorticoConstants.NULL_HANDLE;
 		this.targetFederate = PorticoConstants.NULL_HANDLE;
+		this.targetFederation = PorticoConstants.NULL_HANDLE;
 		this.timestamp = PorticoConstants.NULL_TIME;
 		this.immediate = false;
 	}
@@ -84,6 +87,8 @@ public class PorticoMessage implements Serializable, Cloneable
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	public abstract MessageType getType();
+
 	/**
 	 * Defaults to {@link PorticoConstants#NULL_HANDLE} unless otherwise set.
 	 */
@@ -108,6 +113,19 @@ public class PorticoMessage implements Serializable, Cloneable
 	public void setTargetFederate( int federateHandle )
 	{
 		this.targetFederate = federateHandle;
+	}
+
+	/**
+	 * Defaults to {@link PorticoConstants#NULL_HANDLE} unless otherwise set.
+	 */
+	public int getTargetFederation()
+	{
+		return this.targetFederation;
+	}
+
+	public void setTargetFederation( int federationHandle )
+	{
+		this.targetFederation = federationHandle;
 	}
 
 	/**

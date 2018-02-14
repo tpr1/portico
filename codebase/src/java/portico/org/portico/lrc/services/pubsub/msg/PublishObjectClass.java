@@ -17,6 +17,7 @@ package org.portico.lrc.services.pubsub.msg;
 import java.util.HashSet;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class PublishObjectClass extends PorticoMessage
 {
@@ -44,6 +45,11 @@ public class PublishObjectClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.PublishObjectClass;
+	}
 
 	public int getClassHandle()
 	{

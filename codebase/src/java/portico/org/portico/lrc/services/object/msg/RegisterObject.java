@@ -21,6 +21,7 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message is a notification of a request to register an object instance. The desired name for
@@ -52,6 +53,11 @@ public class RegisterObject extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.RegisterObject;
+	}
 
 	public RegisterObject()
 	{

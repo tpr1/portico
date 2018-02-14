@@ -18,6 +18,7 @@ import java.util.HashSet;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class UnsubscribeObjectClass extends PorticoMessage
 {
@@ -36,7 +37,12 @@ public class UnsubscribeObjectClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.UnsubscribeObjectClass;
+	}
+
 	public UnsubscribeObjectClass( int classHandle )
 	{
 		this.classHandle = classHandle;

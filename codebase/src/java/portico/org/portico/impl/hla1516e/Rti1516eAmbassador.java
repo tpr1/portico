@@ -24,6 +24,7 @@ import hla.rti1516e.*;
 import hla.rti1516e.exceptions.*;
 
 import org.apache.logging.log4j.Logger;
+import org.portico.impl.HLAVersion;
 import org.portico.impl.hla1516e.types.HLA1516eAttributeHandleFactory;
 import org.portico.impl.hla1516e.types.HLA1516eAttributeHandleSet;
 import org.portico.impl.hla1516e.types.HLA1516eAttributeHandleSetFactory;
@@ -96,8 +97,6 @@ import org.portico.lrc.compat.JTimeConstrainedAlreadyEnabled;
 import org.portico.lrc.compat.JTimeConstrainedWasNotEnabled;
 import org.portico.lrc.compat.JTimeRegulationAlreadyEnabled;
 import org.portico.lrc.compat.JTimeRegulationWasNotEnabled;
-import org.portico.lrc.management.Federate;
-import org.portico.lrc.model.ACInstance;
 import org.portico.lrc.model.ACMetadata;
 import org.portico.lrc.model.ICMetadata;
 import org.portico.lrc.model.OCInstance;
@@ -142,11 +141,11 @@ import org.portico.lrc.services.time.msg.ModifyLookahead;
 import org.portico.lrc.services.time.msg.NextEventRequest;
 import org.portico.lrc.services.time.msg.QueryGalt;
 import org.portico.lrc.services.time.msg.TimeAdvanceRequest;
-import org.portico.utils.messaging.ErrorResponse;
-import org.portico.utils.messaging.ExtendedSuccessMessage;
-import org.portico.utils.messaging.MessageContext;
 import org.portico.utils.messaging.PorticoMessage;
-import org.portico.utils.messaging.ResponseMessage;
+import org.portico2.shared.messaging.ErrorResponse;
+import org.portico2.shared.messaging.ExtendedSuccessResponse;
+import org.portico2.shared.messaging.MessageContext;
+import org.portico2.shared.messaging.ResponseMessage;
 
 /**
  * The Portico implementation of the IEEE 1516-2010 (HLA Evolved) RTIambassador class.
@@ -207,19 +206,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 	           CallNotAllowedFromWithinCallback,
 	           RTIinternalError
 	{
-		// check to make sure we're not already connected
-		if( helper.getFederateAmbassador() != null )
-			throw new AlreadyConnected("");
-
-		// set the callback model on the LRC approrpriately
-		this.helper.setCallbackModel( callbackModel );
-		if( callbackModel == CallbackModel.HLA_EVOKED )
-			helper.getLrc().disableImmediateCallbackProcessing();
-		else if( callbackModel == CallbackModel.HLA_IMMEDIATE )
-			helper.getLrc().enableImmediateCallbackProcessing();
-	
-		// store the FederateAmbassador for now, we'll stick it on the join call shortly
-		this.helper.connected( federateReference );
+		this.helper.connect( federateReference, callbackModel );
 	}
 
 	// 4.3
@@ -228,19 +215,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		       CallNotAllowedFromWithinCallback,
 		       RTIinternalError
 	{
-		// make sure we're not currently involved in a federation
-		if( helper.getState().isJoined() )
-		{
-			throw new FederateIsExecutionMember( "Can't disconnect. Joined to federation ["+
-			                                     helper.getState().getFederationName()+"]" );
-		}
-		
-		// remove our federate ambassador reference to signal we're "disconnected" :P
-		this.helper.disconnected();
-		
-		// turn off the immediate callback handler if we have to
-		if( helper.getCallbackModel() == CallbackModel.HLA_IMMEDIATE )
-			helper.getLrc().disableImmediateCallbackProcessing();
+		this.helper.disconnect();
 	}
 
 	// 4.5
@@ -256,6 +231,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( executionName, fomModule );
+		request.setHlaVersion( HLAVersion.IEEE1516e );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -312,6 +288,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( federationName, fomModules );
+		request.setHlaVersion( HLAVersion.IEEE1516e );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -378,6 +355,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 			moduleList.add( module );
 
 		CreateFederation request = new CreateFederation( federationName, moduleList );
+		request.setHlaVersion( HLAVersion.IEEE1516e );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -658,7 +636,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			ExtendedSuccessMessage success = (ExtendedSuccessMessage)response;
+			ExtendedSuccessResponse success = (ExtendedSuccessResponse)response;
 			
 			// return the "handle"
 			return new HLA1516eHandle( (Integer)success.getResult() );
@@ -1933,7 +1911,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			ExtendedSuccessMessage success = (ExtendedSuccessMessage)response;
+			ExtendedSuccessResponse success = (ExtendedSuccessResponse)response;
 			OCInstance instance = (OCInstance)success.getResult();
 			return new HLA1516eHandle( instance.getHandle() );
 		}
@@ -2001,7 +1979,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			ExtendedSuccessMessage success = (ExtendedSuccessMessage)response;
+			ExtendedSuccessResponse success = (ExtendedSuccessResponse)response;
 			OCInstance instance = (OCInstance)success.getResult();
 			return new HLA1516eHandle( instance.getHandle() );
 		}
@@ -3442,24 +3420,25 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 	           RTIinternalError
 	{
 		helper.checkJoined();
+		return true;
 		
-		int oHandle = HLA1516eHandle.fromHandle( theObject );		
-		OCInstance instance = helper.getState().getRepository().getInstance( oHandle );
-		if( instance == null )
-		{
-			throw new ObjectInstanceNotKnown( "handle: " + oHandle );
-		}
-		else
-		{
-			// convert the handle into an ACInstance
-			int aHandle = HLA1516eHandle.fromHandle( theAttribute );
-			ACInstance attribute = instance.getAttribute( aHandle );
-			if( attribute == null )
-				throw new AttributeNotDefined( "handle: " + aHandle );
-
-			// check to see if we are the owner
-			return attribute.getOwner() == helper.getState().getFederateHandle();
-		}
+//		int oHandle = HLA1516eHandle.fromHandle( theObject );		
+//		OCInstance instance = helper.getState().getRepository().getInstance( oHandle );
+//		if( instance == null )
+//		{
+//			throw new ObjectInstanceNotKnown( "handle: " + oHandle );
+//		}
+//		else
+//		{
+//			// convert the handle into an ACInstance
+//			int aHandle = HLA1516eHandle.fromHandle( theAttribute );
+//			ACInstance attribute = instance.getAttribute( aHandle );
+//			if( attribute == null )
+//				throw new AttributeNotDefined( "handle: " + aHandle );
+//
+//			// check to see if we are the owner
+//			return attribute.getOwner() == helper.getState().getFederateHandle();
+//		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -4829,14 +4808,16 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 	           RTIinternalError
 	{
 		helper.checkJoined();
-		
-		// get a reference to all the known federates
-		int handle = HLA1516eHandle.validatedHandle( theHandle );
-		Federate federate = helper.getLrc().getState().getKnownFederate( handle );
-		if( federate == null )
-			throw new InvalidFederateHandle( "No known federate for handle ["+handle+"]" );
-		else
-			return federate.getFederateName();
+
+return "";
+// TODO FIXME
+//		// get a reference to all the known federates
+//		int handle = HLA1516eHandle.validatedHandle( theHandle );
+//		Federate federate = helper.getLrc().getState().getKnownFederate( handle );
+//		if( federate == null )
+//			throw new InvalidFederateHandle( "No known federate for handle ["+handle+"]" );
+//		else
+//			return federate.getFederateName();
 	}
 
 	// 10.6
@@ -4890,12 +4871,13 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 	           RTIinternalError
 	{
 		helper.checkJoined();
+		return null;
 		
-		OCInstance instance = helper.getState().getRepository().getInstance( theObject.hashCode() );
-		if( instance == null )
-			throw new ObjectInstanceNotKnown( "handle: " + theObject );
-		else
-			return new HLA1516eHandle( instance.getDiscoveredClassHandle() );
+//		OCInstance instance = helper.getState().getRepository().getInstance( theObject.hashCode() );
+//		if( instance == null )
+//			throw new ObjectInstanceNotKnown( "handle: " + theObject );
+//		else
+//			return new HLA1516eHandle( instance.getDiscoveredClassHandle() );
 	}
 
 	// 10.9
@@ -4906,16 +4888,17 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 		       RTIinternalError
 	{
 		helper.checkJoined();
+		return null;
 		
-		OCInstance instance = helper.getState().getRepository().getInstance( theName );
-		if( instance == null )
-		{
-			throw new ObjectInstanceNotKnown( "name: " + theName );
-		}
-		else
-		{
-			return new HLA1516eHandle( instance.getHandle() );
-		}
+//		OCInstance instance = helper.getState().getRepository().getInstance( theName );
+//		if( instance == null )
+//		{
+//			throw new ObjectInstanceNotKnown( "name: " + theName );
+//		}
+//		else
+//		{
+//			return new HLA1516eHandle( instance.getHandle() );
+//		}
 	}
 
 	// 10.10
@@ -4926,17 +4909,18 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 	           RTIinternalError
 	{
 		helper.checkJoined();
+		return null;
 		
-		int handle = HLA1516eHandle.validatedHandle( theHandle );
-		OCInstance instance = helper.getState().getRepository().getInstance( handle );
-		if( instance == null )
-		{
-			throw new RTIinternalError( "handle: " + handle );
-		}
-		else
-		{
-			return instance.getName();
-		}
+//		int handle = HLA1516eHandle.validatedHandle( theHandle );
+//		OCInstance instance = helper.getState().getRepository().getInstance( handle );
+//		if( instance == null )
+//		{
+//			throw new RTIinternalError( "handle: " + handle );
+//		}
+//		else
+//		{
+//			return instance.getName();
+//		}
 	}
 
 	// 10.11
@@ -5551,6 +5535,7 @@ public abstract class Rti1516eAmbassador implements RTIambassador
 			// set the source federate, if we have not joined yet (or have resigned)
 			// this will be null
 			request.setSourceFederate( this.helper.getState().getFederateHandle() );
+			request.setTargetFederation( this.helper.getState().getFederationHandle() );
 			
 			// create the context
 			MessageContext message = new MessageContext( request );

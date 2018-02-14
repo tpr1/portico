@@ -16,6 +16,7 @@ package org.portico.lrc.services.pubsub.msg;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class UnsubscribeInteractionClass extends PorticoMessage
 {
@@ -33,7 +34,12 @@ public class UnsubscribeInteractionClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.UnsubscribeInteraction;
+	}
+
 	public UnsubscribeInteractionClass( int classHandle )
 	{
 		this.classHandle = classHandle;

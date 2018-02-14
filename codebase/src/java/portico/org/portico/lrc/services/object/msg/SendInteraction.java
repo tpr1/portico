@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message represents a request to send an interaction with the given set of parameters.
@@ -96,6 +97,11 @@ public class SendInteraction extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.SendInteraction;
+	}
 
 	public int getInteractionId()
 	{

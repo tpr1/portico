@@ -15,6 +15,7 @@
 package org.portico.lrc.services.time.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class EnableTimeConstrained extends PorticoMessage
 {
@@ -34,6 +35,11 @@ public class EnableTimeConstrained extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.EnableTimeConstrained;
+	}
 
 	//----------------------------------------------------------
 	//                     STATIC METHODS

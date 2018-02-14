@@ -18,6 +18,7 @@ import java.util.HashSet;
 
 import org.portico.lrc.PorticoConstants;
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class SubscribeObjectClass extends PorticoMessage
 {
@@ -64,6 +65,11 @@ public class SubscribeObjectClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.SubscribeObjectClass;
+	}
 
 	public int getClassHandle()
 	{

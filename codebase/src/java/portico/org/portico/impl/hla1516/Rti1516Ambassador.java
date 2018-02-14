@@ -15,6 +15,7 @@
 package org.portico.impl.hla1516;
 
 import org.apache.logging.log4j.Logger;
+import org.portico.impl.HLAVersion;
 import org.portico.impl.hla1516.types.*;
 import org.portico.lrc.PorticoConstants;
 import org.portico.lrc.compat.JAsynchronousDeliveryAlreadyDisabled;
@@ -167,6 +168,7 @@ public class Rti1516Ambassador implements RTIambassador
 		// attempt to parse the FOM //
 		// we do this here, because we need to use a HLA1.3 specific FOM parser class
 		CreateFederation request = new CreateFederation( executionName, fdd );
+		request.setHlaVersion( HLAVersion.IEEE1516 );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////

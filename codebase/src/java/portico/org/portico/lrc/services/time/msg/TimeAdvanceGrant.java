@@ -15,6 +15,7 @@
 package org.portico.lrc.services.time.msg;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * Message that represents a time advance grant. Note that this message has two separate time
@@ -48,6 +49,11 @@ public class TimeAdvanceGrant extends PorticoMessage
 	//----------------------------------------------------------
 	//                    INSTANCE METHODS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.TimeAdvanceGrant;
+	}
 
 	public double getTime()
 	{

@@ -17,6 +17,7 @@ package org.portico.lrc.services.pubsub.msg;
 import java.util.HashSet;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 public class UnpublishObjectClass extends PorticoMessage
 {
@@ -34,7 +35,12 @@ public class UnpublishObjectClass extends PorticoMessage
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	
+	@Override 
+	public MessageType getType()
+	{
+		return MessageType.UnpublishObjectClass;
+	}
+
 	public UnpublishObjectClass( int classHandle )
 	{
 		this.classHandle = classHandle;

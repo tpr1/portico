@@ -20,6 +20,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 import org.portico.utils.messaging.PorticoMessage;
+import org.portico2.shared.messaging.MessageType;
 
 /**
  * This message type is used by LRCs to reserve a name it wishes to use as part of an object
@@ -39,6 +40,12 @@ public class ReserveObjectName extends PorticoMessage implements Externalizable
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
+	@Override
+	public MessageType getType()
+	{
+		return MessageType.ReserveObjectName;
+	}
+
 	public ReserveObjectName()
 	{
 		super();
